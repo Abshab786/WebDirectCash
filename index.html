@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DirectCash | Premium Earning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary-emerald: #0A4D2E;
+            --secondary-emerald: #128C55;
+            --vibrant-green: #00C853;
+            --background-light: #F9F9F9;
+            --background-dark: #121212;
+            --surface-dark: #1E1E1E;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--background-light);
+            color: #191C19;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .premium-gradient {
+            background: linear-gradient(135deg, var(--primary-emerald) 0%, var(--secondary-emerald) 100%);
+        }
+
+        .vibrant-gradient {
+            background: linear-gradient(90deg, #00C853 0%, #004D40 100%);
+        }
+
+        .view { transition: opacity 0.4s ease, transform 0.4s ease; position: absolute; width: 100%; min-height: 100vh; top: 0; left: 0; }
+        .hidden-view { opacity: 0; transform: scale(0.95); pointer-events: none; z-index: 0; }
+        .active-view { opacity: 1; transform: scale(1); pointer-events: auto; z-index: 10; }
+
+        /* Custom Progress Bar for Splash */
+        .loading-bar-container { width: 160px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+        .loading-bar-fill { height: 100%; background: white; width: 0%; border-radius: 3px; animation: progress 2s ease-in-out infinite; }
+        @keyframes progress { 0% { width: 0%; transform: translateX(-100%); } 50% { width: 100%; transform: translateX(0%); } 100% { width: 100%; transform: translateX(100%); } }
+
+        .btn-vibrant { background-color: var(--vibrant-green); color: white; transition: all 0.2s; }
+        .btn-vibrant:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-vibrant:disabled { background-color: #E0E0E0; color: #9E9E9E; transform: none; }
+
+        .input-card { background: #F8F8F8; border: 1px solid #E0E0E0; border-radius: 16px; transition: border-color 0.2s; }
+        .input-card:focus-within { border-color: var(--vibrant-green); }
+
+        .premium-card { background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        .spin-wheel { transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1); }
+        #scratch-canvas { cursor: crosshair; touch-action: none; border-radius: 16px; }
+
+        /* Tab Bar Shadow */
+        .tab-bar { box-shadow: 0 -5px 20px rgba(0,0,0,0.03); background: white; height: 72px; }
+
+        .dark-mode { background-color: var(--background-dark); color: white; }
+        .dark-surface { background-color: var(--surface-dark); }
+    </style>
+</head>
+<body>
+
+    <!-- 1. SPLASH SCREEN -->
+    <section id="view-splash" class="view active-view premium-gradient flex flex-col items-center justify-center">
+        <img src="logo_premium_new.png" alt="DirectCash" class="w-64 mb-12" onerror="this.src='https://abshab.com/wp-content/uploads/2026/07/logo_premium_new.png'">
+        <div class="loading-bar-container">
+            <div class="loading-bar-fill"></div>
+        </div>
+        <p class="absolute bottom-16 text-white/90 font-semibold tracking-wider text-sm">Secure Payments via UPI</p>
+    </section>
+
+    <!-- 2. LOGIN / AUTH SCREEN -->
+    <section id="view-auth" class="view hidden-view bg-white px-6">
+        <div class="flex flex-col items-center pt-12 pb-8">
+            <img src="logo_premium_new.png" alt="Logo" class="w-40 mb-4" onerror="this.src='https://abshab.com/wp-content/uploads/2026/07/logo_premium_new.png'">
+            <h1 class="text-2xl font-extrabold">Welcome to DirectCash</h1>
+            <p class="text-gray-400 text-sm mt-1">Earn Real Cash by Completing Simple Tasks</p>
+        </div>
+
+        <!-- Login Type Switcher -->
+        <div class="flex justify-center mb-8">
+            <div class="w-60 h-12 bg-gray-100 rounded-full border p-1 flex relative">
+                <div id="switcher-bg" class="absolute top-1 left-1 w-[116px] h-10 bg-[#0A4D2E] rounded-full transition-all duration-300"></div>
+                <button onclick="toggleAuthMode('MOBILE')" class="flex-1 z-10 font-bold text-sm text-white" id="btn-mode-mobile">Mobile</button>
+                <button onclick="toggleAuthMode('EMAIL')" class="flex-1 z-10 font-bold text-sm text-gray-400" id="btn-mode-email">Email</button>
+            </div>
+        </div>
+
+        <!-- Input Fields -->
+        <div class="space-y-4">
+            <!-- Mobile Group -->
+            <div id="group-mobile" class="space-y-4">
+                <div class="input-card flex items-center px-4 h-16">
+                    <i class="fas fa-mobile-alt text-[#4CAF50] text-xl mr-4"></i>
+                    <span class="font-bold mr-3">+91</span>
+                    <div class="w-[1px] h-6 bg-gray-200 mr-4"></div>
+                    <input type="tel" id="input-phone" placeholder="Enter Mobile Number" maxlength="10" class="flex-1 bg-transparent outline-none font-bold">
+                </div>
+            </div>
+
+            <!-- Email Group (Hidden initially) -->
+            <div id="group-email" class="hidden space-y-4">
+                <div class="input-card flex items-center px-4 h-16">
+                    <i class="fas fa-envelope text-[#4CAF50] text-xl mr-4"></i>
+                    <input type="email" id="input-email" placeholder="Enter Email Address" class="flex-1 bg-transparent outline-none font-medium">
+                </div>
+                <div class="input-card flex items-center px-4 h-16">
+                    <i class="fas fa-lock text-[#4CAF50] text-xl mr-4"></i>
+                    <input type="password" id="input-pass" placeholder="Enter Password (min 6 chars)" class="flex-1 bg-transparent outline-none font-medium">
+                </div>
+            </div>
+
+            <!-- OTP Group (Hidden initially) -->
+            <div id="group-otp" class="hidden">
+                <div class="input-card flex items-center px-4 h-16">
+                    <i class="fas fa-shield-alt text-[#4CAF50] text-xl mr-4"></i>
+                    <input type="text" id="input-otp" placeholder="Enter 6-Digit OTP" maxlength="6" class="flex-1 bg-transparent outline-none font-bold tracking-widest text-center text-lg">
+                </div>
+                <p class="text-center text-xs text-gray-400 mt-2 font-bold" id="otp-status">Verification code sent</p>
+            </div>
+
+            <!-- Referral Code -->
+            <div class="input-card flex items-center px-4 h-14 bg-[#F1F8E9]/50">
+                <i class="fas fa-users text-[#4CAF50] mr-4"></i>
+                <input type="text" id="input-referral" placeholder="Referral Code (Optional)" class="flex-1 bg-transparent outline-none text-sm uppercase">
+            </div>
+        </div>
+
+        <button id="btn-auth-continue" onclick="handleAuth()" class="w-full mt-12 h-14 btn-vibrant rounded-2xl font-bold flex items-center justify-center shadow-lg shadow-green-200">
+            <span>Continue</span>
+            <i class="fas fa-arrow-right ml-4"></i>
+        </button>
+
+        <div id="recaptcha-container"></div>
+
+        <div class="mt-auto pt-24 text-center">
+            <p class="text-[10px] text-gray-300 font-medium">Developed by: AB ShAB</p>
+        </div>
+    </section>
+
+    <!-- 3. MAIN DASHBOARD -->
+    <section id="view-dashboard" class="view hidden-view pb-24 overflow-y-auto">
+        <!-- Dashboard Header -->
+        <header class="premium-gradient px-6 pt-12 pb-32">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-white text-2xl font-bold" id="dash-greeting">Hi, User 👋</h2>
+                    <p class="text-[#00C853] text-sm">Welcome to DirectCash</p>
+                </div>
+                <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+
+            <!-- Premium Balance Card -->
+            <div class="vibrant-gradient rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <div class="flex items-center text-white/80 text-xs">
+                            <span>Available Balance</span>
+                            <i class="fas fa-eye text-[10px] ml-2"></i>
+                        </div>
+                        <h3 class="text-white text-4xl font-extrabold" id="dash-balance">₹0.00</h3>
+                        <p class="text-white/70 text-[10px]">Wallet Balance: <span id="dash-wallet-bal">₹0.00</span></p>
+                    </div>
+                    <div class="text-right space-y-4">
+                        <div>
+                            <p class="text-white/70 text-[10px]">Today's Earning</p>
+                            <div class="flex items-center justify-end text-white font-bold text-sm">
+                                <i class="fas fa-trending-up text-[#00C853] mr-1"></i>
+                                <span id="dash-today-earn">₹0.00</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-white/70 text-[10px]">Total Earned</p>
+                            <div class="flex items-center justify-end text-white font-bold text-sm">
+                                <i class="fas fa-wallet text-[#00C853] mr-1"></i>
+                                <span id="dash-total-earn">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="switchTab('wallet')" class="w-full mt-6 bg-white py-3.5 rounded-xl font-bold text-[#0A4D2E] flex items-center justify-center transition-all active:scale-95">
+                    <i class="fas fa-wallet mr-2"></i>
+                    Withdraw to UPI
+                    <i class="fas fa-chevron-right text-xs ml-2"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- White Section Container -->
+        <div class="bg-white rounded-t-[32px] -mt-20 p-6 space-y-8">
+            <!-- Achievements Banner -->
+            <div class="bg-[#191C19] rounded-2xl p-4 flex items-center space-x-4">
+                <div class="w-10 h-10 bg-[#2C2F2C] rounded-full flex items-center justify-center text-[#FFD700]">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-white font-bold text-xs">Achieve more, earn more!</p>
+                    <p class="text-gray-400 text-[10px]">Complete tasks and unlock rewards.</p>
+                </div>
+                <button class="border border-white/30 rounded-lg px-3 py-1 text-white text-[10px] font-medium">View Achievements</button>
+            </div>
+
+            <!-- Categories Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div onclick="claimDaily()" class="bg-[#E8F5E9] p-4 rounded-2xl text-center space-y-2 cursor-pointer active:scale-95 transition-all">
+                    <i class="fas fa-calendar-check text-[#2E7D32] text-xl"></i>
+                    <h5 class="font-bold text-xs text-black">Daily Check-in</h5>
+                    <p class="text-[9px] text-gray-500">Earn bonus daily</p>
+                    <button id="btn-checkin" class="w-full bg-[#2E7D32] text-white py-2 rounded-lg text-[10px] font-bold">Check-in <i class="fas fa-chevron-right ml-1"></i></button>
+                </div>
+                <div onclick="switchTab('spin')" class="bg-[#F3E5F5] p-4 rounded-2xl text-center space-y-2 cursor-pointer active:scale-95 transition-all">
+                    <i class="fas fa-spinner text-[#7B1FA2] text-xl"></i>
+                    <h5 class="font-bold text-xs text-black">Spin & Win</h5>
+                    <p class="text-[9px] text-gray-500">Win exciting rewards</p>
+                    <button class="w-full bg-[#7B1FA2] text-white py-2 rounded-lg text-[10px] font-bold">Spin Now <i class="fas fa-chevron-right ml-1"></i></button>
+                </div>
+                <div onclick="switchTab('hub')" class="bg-[#FFF3E0] p-4 rounded-2xl text-center space-y-2 cursor-pointer active:scale-95 transition-all">
+                    <i class="fas fa-gift text-[#EF6C00] text-xl"></i>
+                    <h5 class="font-bold text-xs text-black">Premium Offers</h5>
+                    <p class="text-[9px] text-gray-500">High paying offers</p>
+                    <button class="w-full bg-[#EF6C00] text-white py-2 rounded-lg text-[10px] font-bold">Explore <i class="fas fa-chevron-right ml-1"></i></button>
+                </div>
+                <div onclick="switchTab('refer')" class="bg-[#E3F2FD] p-4 rounded-2xl text-center space-y-2 cursor-pointer active:scale-95 transition-all">
+                    <i class="fas fa-users text-[#1565C0] text-xl"></i>
+                    <h5 class="font-bold text-xs text-black">Refer & Earn</h5>
+                    <p class="text-[9px] text-gray-500">Invite & earn more</p>
+                    <button class="w-full bg-[#1565C0] text-white py-2 rounded-lg text-[10px] font-bold">Invite <i class="fas fa-chevron-right ml-1"></i></button>
+                </div>
+            </div>
+
+            <!-- CPA Offer Banner -->
+            <div onclick="switchTab('hub')" class="bg-[#002E1A] p-4 rounded-2xl flex items-center space-x-4 cursor-pointer">
+                <div class="w-12 h-12 bg-[#004D40] rounded-full border border-[#00C853] flex items-center justify-center text-white text-xl">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-white font-bold text-sm">Premium CPA Offers</h5>
+                    <p class="text-gray-400 text-[10px]">High paying offers from Network</p>
+                    <p class="text-[#00C853] font-bold text-xs mt-1">Earn up to ₹250+</p>
+                </div>
+                <button class="bg-[#004D40] text-white px-3 py-2 rounded-lg text-[10px] font-medium flex items-center">
+                    Explore <i class="fas fa-chevron-right ml-2 text-[8px]"></i>
+                </button>
+            </div>
+
+            <!-- Task Wall List -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-sm">Top Tasks for You</h4>
+                    <span class="text-[#00C853] text-xs font-bold">View All</span>
+                </div>
+                <div id="tasks-container" class="space-y-3">
+                    <!-- Tasks injected by JS -->
+                </div>
+            </div>
+
+            <!-- Summary Row -->
+            <div class="bg-[#002E1A] rounded-2xl p-4 flex justify-between items-center text-center">
+                <div class="flex-1">
+                    <i class="fas fa-wallet text-[#00C853] mb-1"></i>
+                    <p class="text-white font-bold text-xs" id="sum-today">₹0.00</p>
+                    <p class="text-gray-500 text-[8px] uppercase">Today's Earn</p>
+                </div>
+                <div class="w-[1px] h-8 bg-gray-700"></div>
+                <div class="flex-1">
+                    <i class="fas fa-list text-[#00C853] mb-1"></i>
+                    <p class="text-white font-bold text-xs" id="sum-tasks">0</p>
+                    <p class="text-gray-500 text-[8px] uppercase">Tasks Done</p>
+                </div>
+                <div class="w-[1px] h-8 bg-gray-700"></div>
+                <div class="flex-1">
+                    <i class="fas fa-users text-[#00C853] mb-1"></i>
+                    <p class="text-white font-bold text-xs" id="sum-refer">₹0.00</p>
+                    <p class="text-gray-500 text-[8px] uppercase">Referral Earn</p>
+                </div>
+                <div class="w-[1px] h-8 bg-gray-700"></div>
+                <div class="flex-1">
+                    <i class="fas fa-money-bill-wave text-[#00C853] mb-1"></i>
+                    <p class="text-white font-bold text-xs" id="sum-withdrawn">₹0.00</p>
+                    <p class="text-gray-500 text-[8px] uppercase">Withdrawn</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🎡 SPIN VIEW -->
+    <section id="view-spin" class="view hidden-view bg-white flex flex-col">
+        <header class="flex items-center px-4 h-16 border-b">
+            <button onclick="switchTab('home')" class="w-10 h-10 flex items-center justify-center text-black">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+            <h2 class="ml-2 font-bold text-lg">Spin & Win</h2>
+        </header>
+        <div class="flex-1 flex flex-col items-center justify-center bg-[#F9F9F9] px-6 text-center space-y-12">
+            <h3 class="text-xl font-bold text-[#00C853]">Spins Remaining Today: <span id="spin-remaining">5</span></h3>
+
+            <div class="relative w-72 h-72">
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-10 text-black text-4xl">
+                    <i class="fas fa-caret-down"></i>
+                </div>
+                <div id="wheel" class="w-full h-full rounded-full border-8 border-[#212121] overflow-hidden relative spin-wheel">
+                    <canvas id="wheel-canvas" width="288" height="288"></canvas>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-12 h-12 bg-white rounded-full shadow-xl border-4 border-[#212121] z-20"></div>
+                </div>
+            </div>
+
+            <button id="btn-play-spin" onclick="playSpin()" class="w-full max-w-xs h-16 btn-vibrant rounded-2xl font-black text-lg tracking-widest shadow-xl shadow-green-200">
+                SPIN NOW
+            </button>
+        </div>
+    </section>
+
+    <!-- 🚀 SUPER TASK HUB VIEW -->
+    <section id="view-hub" class="view hidden-view bg-[#121212] flex flex-col">
+        <header class="flex items-center px-4 h-16 bg-[#121212]">
+            <button onclick="switchTab('home')" class="w-10 h-10 flex items-center justify-center text-white">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+            <h2 class="ml-2 font-black text-lg tracking-widest text-white uppercase">Super Task Hub</h2>
+        </header>
+        <div class="flex-1 p-4 space-y-4 overflow-y-auto">
+            <!-- Video Hub -->
+            <div onclick="showAd()" class="bg-[#1E1E1E] border border-[#00E676]/30 rounded-2xl p-5 flex items-center cursor-pointer active:scale-95 transition-all">
+                <div class="w-12 h-12 bg-[#00E676]/10 text-[#00E676] rounded-full flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-white font-extrabold text-sm uppercase">Premium Video Hub</h5>
+                    <p class="text-gray-500 text-[11px]" id="ad-reward-label">Earn ₹0.05 per ad</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-500"></i>
+            </div>
+            <!-- Scratch Matrix -->
+            <div onclick="switchTab('scratch')" class="bg-[#1E1E1E] border border-[#FFD700]/30 rounded-2xl p-5 flex items-center cursor-pointer active:scale-95 transition-all">
+                <div class="w-12 h-12 bg-[#FFD700]/10 text-[#FFD700] rounded-full flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-white font-extrabold text-sm uppercase">Golden Scratch Matrix</h5>
+                    <p class="text-gray-500 text-[11px]" id="scratch-reward-label">Win up to ₹1.00</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-500"></i>
+            </div>
+            <!-- Captcha -->
+            <div onclick="switchTab('captcha')" class="bg-[#1E1E1E] border border-[#9C27B0]/30 rounded-2xl p-5 flex items-center cursor-pointer active:scale-95 transition-all">
+                <div class="w-12 h-12 bg-[#9C27B0]/10 text-[#9C27B0] rounded-full flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-white font-extrabold text-sm uppercase">Captcha Engine</h5>
+                    <p class="text-gray-500 text-[11px]">Type & Earn Instantly</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-500"></i>
+            </div>
+            <!-- Quiz -->
+            <div onclick="switchTab('quiz')" class="bg-[#1E1E1E] border border-[#2196F3]/30 rounded-2xl p-5 flex items-center cursor-pointer active:scale-95 transition-all">
+                <div class="w-12 h-12 bg-[#2196F3]/10 text-[#2196F3] rounded-full flex items-center justify-center text-2xl mr-4">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 class="text-white font-extrabold text-sm uppercase">Math Quiz Hub</h5>
+                    <p class="text-gray-500 text-[11px]">Solve & Earn Rewards</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-500"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🎨 SCRATCH VIEW -->
+    <section id="view-scratch" class="view hidden-view bg-white flex flex-col">
+        <header class="flex items-center px-4 h-16 border-b">
+            <button onclick="switchTab('hub')" class="w-10 h-10 flex items-center justify-center text-black">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+            <h2 class="ml-2 font-bold text-lg uppercase tracking-widest">Golden Scratch</h2>
+        </header>
+        <div class="flex-1 p-8 flex flex-col items-center justify-center space-y-12">
+            <p class="text-gray-400 font-medium">Remaining Today: <span id="scratch-remaining" class="text-black font-bold">20</span></p>
+
+            <div class="relative w-full max-w-[320px] aspect-square bg-[#FFD700] rounded-2xl shadow-xl flex items-center justify-center overflow-hidden">
+                <div class="text-center">
+                    <h4 class="text-white font-black text-2xl">SCRATCH HERE</h4>
+                    <p class="text-white/80 text-sm" id="scratch-max-label">Win up to ₹1.00</p>
+                    <div id="scratch-reveal-area" class="hidden mt-4">
+                        <p class="text-white/70 text-xs font-bold uppercase">You Won</p>
+                        <h2 class="text-white text-5xl font-black" id="scratch-amount">₹0.00</h2>
+                    </div>
+                </div>
+                <canvas id="scratch-canvas" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+
+            <button id="btn-scratch-claim" onclick="claimScratch()" class="hidden w-full max-w-xs h-14 btn-vibrant rounded-2xl font-black tracking-widest shadow-xl">
+                CLAIM REWARD
+            </button>
+        </div>
+    </section>
+
+    <!-- 👤 PROFILE VIEW -->
+    <section id="view-refer" class="view hidden-view bg-[#F9F9F9] flex flex-col overflow-y-auto pb-24">
+        <!-- Profile Header -->
+        <div class="premium-gradient pt-16 pb-12 flex flex-col items-center">
+            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-white text-4xl font-bold mb-4" id="prof-initial">U</div>
+            <h3 class="text-white text-xl font-bold" id="prof-name">User</h3>
+            <p class="text-white/80 text-sm">Verified User</p>
+        </div>
+
+        <div class="p-4 space-y-6">
+            <!-- Lifetime Earning Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">My Lifetime Earnings</p>
+                    <h4 class="text-[#00C853] text-2xl font-black" id="prof-total">₹0.00</h4>
+                </div>
+                <i class="fas fa-trending-up text-[#00C853] text-4xl opacity-50"></i>
+            </div>
+
+            <!-- Referral Section -->
+            <div class="bg-[#0A4D2E] rounded-3xl p-6 text-white space-y-6 shadow-xl">
+                <div>
+                    <p class="text-emerald-100 text-xs font-medium uppercase tracking-widest">Your Invitation Code</p>
+                    <div class="flex items-center justify-between bg-white/10 p-4 rounded-xl mt-2 border border-white/10">
+                        <h3 id="prof-ref-code" class="text-2xl font-black tracking-widest">------</h3>
+                        <button onclick="copyRefer()" class="w-10 h-10 bg-white text-[#0A4D2E] rounded-lg flex items-center justify-center active:scale-90 transition-all">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center pt-2">
+                    <div><p class="text-[9px] uppercase text-emerald-200">Level 1</p><p class="font-black text-sm">₹10.00</p></div>
+                    <div><p class="text-[9px] uppercase text-emerald-200">Level 2</p><p class="font-black text-sm">₹3.00</p></div>
+                    <div><p class="text-[9px] uppercase text-emerald-200">Level 3</p><p class="font-black text-sm">₹1.00</p></div>
+                </div>
+            </div>
+
+            <!-- Support Menu -->
+            <div class="space-y-4">
+                <h5 class="text-gray-400 text-xs font-bold uppercase tracking-widest ml-1">Support & Help</h5>
+                <div class="bg-white rounded-2xl overflow-hidden divide-y">
+                    <div onclick="location.href='mailto:ab.shabofficial@gmail.com'" class="flex items-center p-4 active:bg-gray-50">
+                        <div class="w-9 h-9 bg-[#F1F8E9] rounded-full flex items-center justify-center text-[#0A4D2E] mr-4"><i class="fas fa-envelope"></i></div>
+                        <span class="flex-1 font-medium">Email Support</span>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    <div onclick="window.open('https://abshab.com', '_blank')" class="flex items-center p-4 active:bg-gray-50">
+                        <div class="w-9 h-9 bg-[#F1F8E9] rounded-full flex items-center justify-center text-[#0A4D2E] mr-4"><i class="fas fa-globe"></i></div>
+                        <span class="flex-1 font-medium">Visit Website</span>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logOut()" class="w-full h-14 bg-red-50 text-red-600 rounded-2xl font-bold flex items-center justify-center transition-all active:scale-95">
+                <i class="fas fa-sign-out-alt mr-3"></i> Logout
+            </button>
+
+            <div class="text-center py-6">
+                <p class="text-gray-400 text-xs font-medium">Developed by: AB ShAB</p>
+                <p class="text-gray-200 text-[10px]">Version 1.0.0</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 💳 WALLET VIEW -->
+    <section id="view-wallet" class="view hidden-view bg-[#F9F9F9] flex flex-col overflow-y-auto pb-24">
+        <header class="flex items-center px-4 h-16 bg-white border-b sticky top-0 z-50">
+            <button onclick="switchTab('home')" class="w-10 h-10 flex items-center justify-center text-black">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+            <h2 class="ml-2 font-bold text-lg">My Wallet</h2>
+        </header>
+
+        <div class="p-6 space-y-8">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Withdraw to UPI ID</label>
+                    <div class="flex items-center input-card px-5 h-16 mt-1">
+                        <i class="fas fa-at text-gray-300 mr-4"></i>
+                        <input type="text" id="input-upi" placeholder="username@upi" class="flex-1 bg-transparent outline-none font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1" id="label-min-wd">Amount (Min ₹100)</label>
+                    <div class="flex items-center input-card px-5 h-16 mt-1">
+                        <i class="fas fa-indian-rupee-sign text-gray-300 mr-4"></i>
+                        <input type="number" id="input-wd-amount" placeholder="0.00" class="flex-1 bg-transparent outline-none font-black text-xl">
+                    </div>
+                </div>
+                <button onclick="submitWithdraw()" class="w-full h-16 btn-vibrant rounded-2xl font-black tracking-widest shadow-xl shadow-green-200">CONFIRM WITHDRAWAL</button>
+            </div>
+
+            <div class="space-y-4">
+                <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest ml-1">Transaction History</h4>
+                <div id="transactions-container" class="space-y-3">
+                    <!-- Tx list injected by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Tab Navigation -->
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 tab-bar flex items-center justify-around z-[100] hidden">
+        <button onclick="switchTab('home')" id="tab-home" class="flex flex-col items-center space-y-1 text-[#0A4D2E]">
+            <i class="fas fa-house text-lg"></i>
+            <span class="text-[9px] font-bold uppercase">Home</span>
+        </button>
+        <button onclick="switchTab('hub')" id="tab-hub" class="flex flex-col items-center space-y-1 text-gray-400">
+            <i class="fas fa-rocket text-lg"></i>
+            <span class="text-[9px] font-bold uppercase">Tasks</span>
+        </button>
+        <button onclick="switchTab('wallet')" id="tab-wallet" class="flex flex-col items-center space-y-1 text-gray-400">
+            <i class="fas fa-wallet text-lg"></i>
+            <span class="text-[9px] font-bold uppercase">Wallet</span>
+        </button>
+        <button onclick="switchTab('refer')" id="tab-refer" class="flex flex-col items-center space-y-1 text-gray-400">
+            <i class="fas fa-user-circle text-lg"></i>
+            <span class="text-[9px] font-bold uppercase">Profile</span>
+        </button>
+    </nav>
+
+    <!-- Firebase SDK & Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPhoneNumber, RecaptchaVerifier, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy, limit, increment, serverTimestamp, runTransaction, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiG6nQJeO0yeP3BKyTI-9tJrw6fAH1Wrw",
+            authDomain: "directcash-a5ac0.firebaseapp.com",
+            projectId: "directcash-a5ac0",
+            storageBucket: "directcash-a5ac0.firebasestorage.app",
+            messagingSenderId: "1048029387526",
+            appId: "1:1048029387526:web:753066914619b0237edc87"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userData = null;
+        let adminSettings = {
+            min_withdrawal_limit: 100,
+            rewarded_video_rate: 0.05,
+            scratch_daily_limit: 20,
+            scratch_max_reward: 1.0
+        };
+        let confirmationResult = null;
+        let authType = 'MOBILE'; // 'MOBILE' or 'EMAIL'
+
+        // --- AUTH FLOW ---
+        window.toggleAuthMode = (mode) => {
+            authType = mode;
+            const bg = document.getElementById('switcher-bg');
+            const btnMobile = document.getElementById('btn-mode-mobile');
+            const btnEmail = document.getElementById('btn-mode-email');
+
+            if (mode === 'MOBILE') {
+                bg.style.left = '4px';
+                btnMobile.className = "flex-1 z-10 font-bold text-sm text-white";
+                btnEmail.className = "flex-1 z-10 font-bold text-sm text-gray-400";
+                document.getElementById('group-mobile').classList.remove('hidden');
+                document.getElementById('group-email').classList.add('hidden');
+            } else {
+                bg.style.left = '120px';
+                btnEmail.className = "flex-1 z-10 font-bold text-sm text-white";
+                btnMobile.className = "flex-1 z-10 font-bold text-sm text-gray-400";
+                document.getElementById('group-mobile').classList.add('hidden');
+                document.getElementById('group-email').classList.remove('hidden');
+            }
+        };
+
+        window.handleAuth = async () => {
+            const btn = document.getElementById('btn-auth-continue');
+            const referral = document.getElementById('input-referral').value.trim();
+
+            if (authType === 'MOBILE') {
+                if (!confirmationResult) {
+                    const phone = document.getElementById('input-phone').value;
+                    if (phone.length !== 10) return alert("Enter valid 10-digit number");
+
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> Sending...`;
+
+                    if (!window.recaptchaVerifier) {
+                        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+                    }
+
+                    try {
+                        confirmationResult = await signInWithPhoneNumber(auth, "+91" + phone, window.recaptchaVerifier);
+                        document.getElementById('group-mobile').classList.add('hidden');
+                        document.getElementById('group-otp').classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.innerHTML = `Verify OTP <i class="fas fa-arrow-right ml-4"></i>`;
+                    } catch (e) {
+                        alert("Error: " + e.message);
+                        btn.disabled = false;
+                        btn.innerHTML = "Continue";
+                    }
+                } else {
+                    const otp = document.getElementById('input-otp').value;
+                    if (otp.length !== 6) return alert("Enter 6-digit OTP");
+                    try {
+                        const result = await confirmationResult.confirm(otp);
+                        await registerUserSync(result.user.uid, "User", referral);
+                    } catch (e) { alert("Invalid OTP code."); }
+                }
+            } else {
+                const email = document.getElementById('input-email').value;
+                const pass = document.getElementById('input-pass').value;
+                if (!email.includes('@') || pass.length < 6) return alert("Enter valid email and password (min 6 chars)");
+
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> Logging in...`;
+
+                try {
+                    const result = await signInWithEmailAndPassword(auth, email, pass);
+                    await registerUserSync(result.user.uid, email.split('@')[0], referral);
+                } catch (e) {
+                    try {
+                        const result = await createUserWithEmailAndPassword(auth, email, pass);
+                        await registerUserSync(result.user.uid, email.split('@')[0], referral);
+                    } catch (err) {
+                        alert(err.message);
+                        btn.disabled = false;
+                        btn.innerHTML = "Continue";
+                    }
+                }
+            }
+        };
+
+        const registerUserSync = async (uid, name, refEntered) => {
+            const userRef = doc(db, "users", uid);
+            const snap = await getDoc(userRef);
+            if (snap.exists()) return;
+
+            let pId = "", gpId = "", ggpId = "";
+            if (refEntered) {
+                const q = query(collection(db, "users"), where("referral_code", "==", refEntered.toUpperCase()));
+                const rSnap = await getDocs(q);
+                if (!rSnap.empty) {
+                    const parent = rSnap.docs[0];
+                    pId = parent.id;
+                    gpId = parent.data().referred_by || "";
+                    ggpId = parent.data().referred_by_level2 || "";
+                }
+            }
+
+            const myCode = (name.substring(0,3).toUpperCase() + Math.floor(100+Math.random()*900)).padEnd(6, 'X');
+
+            await runTransaction(db, async (t) => {
+                t.set(userRef, {
+                    uid, name,
+                    wallet_balance: 0,
+                    total_earned: 0,
+                    referral_code: myCode,
+                    referred_by: pId,
+                    referred_by_level2: gpId,
+                    referred_by_level3: ggpId,
+                    current_streak: 0,
+                    last_check_in_date: null,
+                    daily_spin_count: 0,
+                    last_spin_date: "",
+                    daily_ad_limit: 10,
+                    daily_scratch_count: 0,
+                    last_task_date: "",
+                    is_banned: false
+                });
+
+                if (pId) {
+                    t.update(doc(db, "users", pId), { wallet_balance: increment(10), total_earned: increment(10) });
+                    t.set(doc(collection(doc(db, "users", pId), "referrals"), uid), { name, amount: 10, timestamp: serverTimestamp() });
+                    if (gpId) t.update(doc(db, "users", gpId), { wallet_balance: increment(3), total_earned: increment(3) });
+                    if (ggpId) t.update(doc(db, "users", ggpId), { wallet_balance: increment(1), total_earned: increment(1) });
+                }
+            });
+        };
+
+        window.logOut = () => signOut(auth);
+
+        // --- SESSION MANAGEMENT ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUser = user;
+                hideAllViews();
+                document.getElementById('view-dashboard').classList.add('active-view');
+                document.getElementById('bottom-nav').classList.remove('hidden');
+                initSync();
+            } else {
+                currentUser = null;
+                hideAllViews();
+                setTimeout(() => {
+                    document.getElementById('view-splash').classList.add('hidden-view');
+                    document.getElementById('view-auth').classList.add('active-view');
+                    document.getElementById('bottom-nav').classList.add('hidden');
+                }, 2000);
+            }
+        });
+
+        function hideAllViews() {
+            document.querySelectorAll('.view').forEach(v => {
+                v.classList.remove('active-view');
+                v.classList.add('hidden-view');
+            });
+        }
+
+        // --- DATA SYNC & UI ---
+        function initSync() {
+            onSnapshot(doc(db, "admin_config", "settings"), snap => {
+                if (snap.exists()) {
+                    adminSettings = { ...adminSettings, ...snap.data() };
+                    document.getElementById('label-min-wd').innerText = `Amount (Min ₹${adminSettings.min_withdrawal_limit})`;
+                    document.getElementById('ad-reward-label').innerText = `Earn ₹${adminSettings.rewarded_video_rate} per ad`;
+                    document.getElementById('scratch-reward-label').innerText = `Win up to ₹${adminSettings.scratch_max_reward}`;
+                    document.getElementById('scratch-max-label').innerText = `Win up to ₹${adminSettings.scratch_max_reward}`;
+                }
+            });
+
+            onSnapshot(doc(db, "users", currentUser.uid), snap => {
+                if (!snap.exists()) return;
+                userData = snap.data();
+                if (userData.is_banned) { alert("ACCOUNT BANNED"); logOut(); return; }
+                updateGlobalUI();
+            });
+
+            // Transactions
+            const qTx = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("timestamp", "desc"), limit(15));
+            onSnapshot(qTx, snap => {
+                const container = document.getElementById('transactions-container');
+                if (snap.empty) { container.innerHTML = '<p class="text-center text-gray-300 text-xs py-10 italic">No activity yet.</p>'; return; }
+                container.innerHTML = snap.docs.map(d => {
+                    const tx = d.data();
+                    const isCredit = tx.type === 'CREDIT';
+                    return `
+                        <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-gray-50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 ${isCredit ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'} rounded-xl flex items-center justify-center">
+                                    <i class="fas ${isCredit ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-xs">${tx.description || 'System Entry'}</p>
+                                    <p class="text-[9px] text-gray-400 font-bold uppercase">${tx.status || 'Success'}</p>
+                                </div>
+                            </div>
+                            <p class="font-black ${isCredit ? 'text-emerald-600' : 'text-red-600'}">₹${(tx.amount || 0).toFixed(2)}</p>
+                        </div>
+                    `;
+                }).join('');
+            });
+
+            // Tasks
+            onSnapshot(collection(db, "tasks"), snap => {
+                const container = document.getElementById('tasks-container');
+                container.innerHTML = snap.docs.map(d => {
+                    const t = d.data();
+                    return `
+                        <div class="bg-white p-5 rounded-3xl border border-gray-50 flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-emerald-50 text-[#128C55] rounded-2xl flex items-center justify-center"><i class="fas fa-rocket"></i></div>
+                                <div><h5 class="font-bold text-sm">${t.title}</h5><p class="text-[10px] text-gray-400 font-bold uppercase">Earn ₹${t.reward}</p></div>
+                            </div>
+                            <button onclick="window.open('${t.url}', '_blank'); logTask('${d.id}', ${t.reward}, '${t.title}')" class="bg-[#0A4D2E] text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase">Start</button>
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        function updateGlobalUI() {
+            const today = new Date().toISOString().split('T')[0];
+            const name = userData.name || 'User';
+            document.getElementById('dash-greeting').innerText = `Hi, ${name.split(' ')[0]} 👋`;
+            document.getElementById('prof-name').innerText = name;
+            document.getElementById('prof-initial').innerText = name.charAt(0).toUpperCase();
+
+            const bal = (userData.wallet_balance || 0).toFixed(2);
+            document.getElementById('dash-balance').innerText = `₹${bal}`;
+            document.getElementById('dash-wallet-bal').innerText = `₹${bal}`;
+
+            const total = (userData.total_earned || 0).toFixed(2);
+            document.getElementById('dash-total-earn').innerText = `₹${total}`;
+            document.getElementById('prof-total').innerText = `₹${total}`;
+
+            document.getElementById('prof-ref-code').innerText = userData.referral_code || '------';
+
+            const spinRem = userData.last_spin_date === today ? (5 - userData.daily_spin_count) : 5;
+            document.getElementById('spin-remaining').innerText = Math.max(0, spinRem);
+
+            const scratchLimit = adminSettings.scratch_daily_limit || 20;
+            const scratchRem = userData.last_task_date === today ? (scratchLimit - (userData.daily_scratch_count || 0)) : scratchLimit;
+            document.getElementById('scratch-remaining').innerText = Math.max(0, scratchRem);
+
+            // Summary Stats
+            document.getElementById('sum-tasks').innerText = userData.daily_scratch_count || 0;
+
+            const lastCheck = userData.last_check_in_date?.toDate()?.toDateString();
+            const btnCheck = document.getElementById('btn-checkin');
+            if (lastCheck === new Date().toDateString()) {
+                btnCheck.innerText = "Claimed";
+                btnCheck.disabled = true;
+                btnCheck.className = "w-full bg-gray-200 text-gray-400 py-2 rounded-lg text-[10px] font-bold cursor-not-allowed";
+            }
+        }
+
+        // --- NAVIGATION ---
+        window.switchTab = (id) => {
+            hideAllViews();
+            document.getElementById(`view-${id}`).classList.remove('hidden-view');
+            document.getElementById(`view-${id}`).classList.add('active-view');
+
+            // Update Tab Icons
+            document.querySelectorAll('#bottom-nav button').forEach(b => b.classList.replace('text-[#0A4D2E]', 'text-gray-400'));
+            const activeTab = document.getElementById(`tab-${id}`);
+            if (activeTab) activeTab.classList.replace('text-gray-400', 'text-[#0A4D2E]');
+
+            if (id === 'spin') initWheel();
+            if (id === 'scratch') initScratch();
+        };
+
+        // --- GAMES & REWARDS ---
+
+        // 🎡 SPIN
+        const segments = [
+            { amt: 1, label: "₹1", color: "#FF5252" }, { amt: 2, label: "₹2", color: "#448AFF" },
+            { amt: 0, label: "TRY AGAIN", color: "#FFD740" }, { amt: 5, label: "₹5", color: "#69F0AE" },
+            { amt: 3, label: "₹3", color: "#FFAB40" }, { amt: 0, label: "TRY AGAIN", color: "#E040FB" }
+        ];
+
+        function initWheel() {
+            const canvas = document.getElementById('wheel-canvas');
+            const ctx = canvas.getContext('2d');
+            const r = canvas.width / 2;
+            ctx.clearRect(0, 0, 288, 288);
+            segments.forEach((s, i) => {
+                ctx.beginPath();
+                ctx.fillStyle = s.color;
+                ctx.moveTo(r, r);
+                ctx.arc(r, r, r, i * (Math.PI/3), (i+1) * (Math.PI/3));
+                ctx.fill();
+                ctx.save(); ctx.translate(r, r); ctx.rotate(i * (Math.PI/3) + (Math.PI/6));
+                ctx.textAlign = "right"; ctx.fillStyle = "black"; ctx.font = "bold 16px Plus Jakarta Sans";
+                ctx.fillText(s.label, r - 30, 6); ctx.restore();
+            });
+        }
+
+        window.playSpin = async () => {
+            const today = new Date().toISOString().split('T')[0];
+            const count = (userData.last_spin_date === today) ? userData.daily_spin_count : 0;
+            if (count >= 5) return alert("Daily limit reached!");
+
+            const btn = document.getElementById('btn-play-spin');
+            btn.disabled = true; btn.innerText = "SPINNING...";
+            const wheel = document.getElementById('wheel');
+            const idx = Math.floor(Math.random() * 6);
+            const deg = (360 * 6) + (360 - (idx * 60) - 30);
+            wheel.style.transform = `rotate(${deg}deg)`;
+
+            setTimeout(async () => {
+                await processReward('SPIN', segments[idx].amt);
+                alert(segments[idx].amt > 0 ? `Won ₹${segments[idx].amt}!` : "Better luck next time!");
+                btn.disabled = false; btn.innerText = "SPIN NOW";
+            }, 4000);
+        };
+
+        // 🎨 SCRATCH
+        function initScratch() {
+            const canvas = document.getElementById('scratch-canvas');
+            const ctx = canvas.getContext('2d');
+            document.getElementById('scratch-reveal-area').classList.add('hidden');
+            document.getElementById('btn-scratch-claim').classList.add('hidden');
+
+            const amt = (0.1 + Math.random() * (adminSettings.scratch_max_reward - 0.1)).toFixed(2);
+            document.getElementById('scratch-amount').innerText = `₹${amt}`;
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#CBD5E1'; ctx.fillRect(0, 0, 320, 320);
+            ctx.fillStyle = '#94A3B8'; ctx.font = 'bold 24px Plus Jakarta Sans'; ctx.textAlign = 'center';
+            ctx.fillText('SCRATCH HERE', 160, 160);
+
+            let drawing = false;
+            canvas.onmousedown = canvas.ontouchstart = () => drawing = true;
+            canvas.onmouseup = canvas.ontouchend = () => drawing = false;
+            canvas.onmousemove = canvas.ontouchmove = (e) => {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI * 2); ctx.fill();
+
+                const pix = ctx.getImageData(0, 0, 320, 320).data;
+                let t = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) t++;
+                if (t > (pix.length/4) * 0.6) {
+                    ctx.clearRect(0,0,320,320);
+                    document.getElementById('scratch-reveal-area').classList.remove('hidden');
+                    document.getElementById('btn-scratch-claim').classList.remove('hidden');
+                }
+            };
+        }
+
+        window.claimScratch = async () => {
+            const val = parseFloat(document.getElementById('scratch-amount').innerText.replace('₹',''));
+            await processReward('SCRATCH', val);
+            alert(`Collected ₹${val}`);
+            switchTab('hub');
+        };
+
+        // --- CORE PROCESSOR ---
+        async function processReward(type, amt) {
+            const ref = doc(db, "users", currentUser.uid);
+            const today = new Date().toISOString().split('T')[0];
+            await runTransaction(db, async (t) => {
+                const s = await t.get(ref);
+                const d = s.data();
+                let up = { wallet_balance: increment(amt), total_earned: increment(amt), last_task_date: today };
+                if (type === 'SPIN') {
+                    const c = d.last_spin_date === today ? d.daily_spin_count : 0;
+                    up.daily_spin_count = c + 1; up.last_spin_date = today;
+                } else if (type === 'SCRATCH') {
+                    const c = d.last_task_date === today ? d.daily_scratch_count : 0;
+                    up.daily_scratch_count = c + 1;
+                }
+                t.update(ref, up);
+                t.set(doc(collection(db, "withdrawals")), {
+                    userId: currentUser.uid, amount: amt, type: 'CREDIT', status: 'SUCCESS',
+                    timestamp: serverTimestamp(), description: `Earned via ${type}`
+                });
+            });
+        }
+
+        window.claimDaily = async () => {
+            const ref = doc(db, "users", currentUser.uid);
+            try {
+                await runTransaction(db, async (t) => {
+                    const s = await t.get(ref);
+                    if (s.data().last_check_in_date?.toDate()?.toDateString() === new Date().toDateString()) throw "Done";
+                    t.update(ref, { wallet_balance: increment(2), total_earned: increment(2), last_check_in_date: serverTimestamp() });
+                    t.set(doc(collection(db, "withdrawals")), {
+                        userId: currentUser.uid, amount: 2, type: 'CREDIT', status: 'SUCCESS',
+                        timestamp: serverTimestamp(), description: 'Daily Check-in Bonus'
+                    });
+                });
+                alert("₹2.00 Bonus Claimed!");
+            } catch(e) {}
+        };
+
+        window.logTask = async (id, rew, tit) => {
+            const ref = doc(db, "users", currentUser.uid);
+            const compRef = doc(collection(ref, "completed_tasks"), id);
+            if ((await getDoc(compRef)).exists()) return alert("Already done.");
+            await runTransaction(db, async (t) => {
+                t.update(ref, { wallet_balance: increment(rew), total_earned: increment(rew) });
+                t.set(compRef, { timestamp: serverTimestamp(), reward: rew, title: tit });
+                t.set(doc(collection(db, "withdrawals")), {
+                    userId: currentUser.uid, amount: rew, type: 'CREDIT', status: 'SUCCESS',
+                    timestamp: serverTimestamp(), description: `Task: ${tit}`
+                });
+            });
+            alert(`Earned ₹${rew}!`);
+        };
+
+        window.submitWithdraw = async () => {
+            const upi = document.getElementById('input-upi').value;
+            const amt = parseFloat(document.getElementById('input-wd-amount').value);
+            if (!upi.includes('@') || amt < adminSettings.min_withdrawal_limit || amt > userData.wallet_balance) return alert("Invalid entry or insufficient balance.");
+
+            await runTransaction(db, async (t) => {
+                t.update(doc(db, "users", currentUser.uid), { wallet_balance: increment(-amt) });
+                t.set(doc(collection(db, "withdrawals")), {
+                    userId: currentUser.uid, amount: amt, upiId: upi, type: 'DEBIT', status: 'Pending',
+                    timestamp: serverTimestamp(), description: `Withdrawal to ${upi}`
+                });
+            });
+            alert("Request Submitted!");
+            document.getElementById('input-wd-amount').value = "";
+        };
+
+        window.copyRefer = () => {
+            navigator.clipboard.writeText(userData.referral_code);
+            alert("Copied!");
+        };
+
+        window.showAd = () => {
+            alert("Ad Space (Video Hub)");
+            processReward('VIDEO_HUB', adminSettings.rewarded_video_rate);
+        };
+    </script>
+</body>
+</html>
