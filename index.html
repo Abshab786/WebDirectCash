@@ -241,7 +241,7 @@
                     <p class="text-[9px] text-gray-500">Win exciting rewards</p>
                     <button class="w-full bg-[#7B1FA2] text-white py-2 rounded-lg text-[10px] font-bold">Spin Now <i class="fas fa-chevron-right ml-1"></i></button>
                 </div>
-                <div onclick="triggerOfferwall()" class="bg-[#FFF3E0] p-4 rounded-2xl text-center space-y-2 cursor-pointer active:scale-95 transition-all">
+                <div onclick="handleNavClick(event, 'offerwall')" class="bg-[#FFF3E0] p-4 rounded-2xl text-center space-y-2 cursor-pointer active:scale-95 transition-all">
                     <i class="fas fa-gift text-[#EF6C00] text-xl"></i>
                     <h5 class="font-bold text-xs text-black">Premium Offers</h5>
                     <p class="text-[9px] text-gray-500">High paying offers</p>
@@ -256,7 +256,7 @@
             </div>
 
             <!-- CPA Offer Banner -->
-            <div onclick="triggerOfferwall()" class="bg-[#002E1A] p-4 rounded-2xl flex items-center space-x-4 cursor-pointer">
+            <div onclick="handleNavClick(event, 'offerwall')" class="bg-[#002E1A] p-4 rounded-2xl flex items-center space-x-4 cursor-pointer">
                 <div class="w-12 h-12 bg-[#004D40] rounded-full border border-[#00C853] flex items-center justify-center text-white text-xl">
                     <i class="fas fa-sync-alt"></i>
                 </div>
@@ -342,14 +342,14 @@
     <!-- 🚀 SUPER TASK HUB VIEW -->
     <section id="view-hub" class="view hidden-view bg-[#121212] flex flex-col">
         <header class="flex items-center px-4 h-16 bg-[#121212]">
-            <button onclick="switchTab('home')" class="w-10 h-10 flex items-center justify-center text-white">
+            <button onclick="handleNavClick(event, 'home')" class="w-10 h-10 flex items-center justify-center text-white">
                 <i class="fas fa-arrow-left text-lg"></i>
             </button>
             <h2 class="ml-2 font-black text-lg tracking-widest text-white uppercase">Super Task Hub</h2>
         </header>
         <div class="flex-1 p-4 space-y-4 overflow-y-auto">
             <!-- Global Offerwall Module -->
-            <div onclick="triggerOfferwall()" class="bg-[#FFF3E0] border border-[#EF6C00]/30 rounded-2xl p-5 flex items-center cursor-pointer active:scale-95 transition-all">
+            <div onclick="handleNavClick(event, 'offerwall')" class="bg-[#FFF3E0] border border-[#EF6C00]/30 rounded-2xl p-5 flex items-center cursor-pointer active:scale-95 transition-all">
                 <div class="w-12 h-12 bg-[#EF6C00]/10 text-[#EF6C00] rounded-full flex items-center justify-center text-2xl mr-4">
                     <i class="fas fa-gift"></i>
                 </div>
@@ -409,6 +409,25 @@
         <div id="hub-overlay-hook" class="w-full flex items-center justify-center py-2"></div>
     </section>
 
+    <!-- 🌐 GLOBAL OFFERWALL VIEW (CPAlead VIP) -->
+    <section id="view-offerwall" class="view hidden-view bg-white flex flex-col">
+        <header class="flex items-center px-4 h-16 border-b">
+            <button onclick="handleNavClick(event, 'hub')" class="w-10 h-10 flex items-center justify-center text-black">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+            <h2 class="ml-2 font-bold text-lg uppercase tracking-widest">Premium Offerwall</h2>
+        </header>
+        <div class="flex-1 bg-gray-50 relative">
+            <div id="offerwall-loader" class="absolute inset-0 flex items-center justify-center bg-white z-20">
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-circle-notch fa-spin text-emerald-500 text-3xl mb-4"></i>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Loading Premium Tasks...</p>
+                </div>
+            </div>
+            <iframe id="offerwall-iframe" src="" class="w-full h-full border-none relative z-10" onload="document.getElementById('offerwall-loader').classList.add('hidden')"></iframe>
+        </div>
+    </section>
+
     <!-- 🧩 CAPTCHA VIEW -->
     <section id="view-captcha" class="view hidden-view bg-white flex flex-col">
         <header class="flex items-center px-4 h-16 border-b">
@@ -418,8 +437,15 @@
             <h2 class="ml-2 font-bold text-lg uppercase tracking-widest">Captcha Engine</h2>
         </header>
         <div class="flex-1 p-8 flex flex-col items-center justify-center space-y-8">
+            <!-- Dynamic Top Banner Ad Slot -->
+            <div id="captcha-top-ad-slot" class="w-full min-h-[60px] flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 overflow-hidden">
+                <!-- Ad Script Placeholder -->
+                <span class="text-[9px] text-gray-300 font-bold uppercase tracking-widest">Premium Advertisement</span>
+            </div>
+
             <div class="text-center">
-                <p class="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Type & Earn ₹0.02 Instantly</p>
+                <p class="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Type & Earn ₹0.50 Instantly</p>
+                <p class="text-gray-300 text-[9px] mt-1">Remaining Today: <span id="captcha-remaining" class="text-black font-bold">100</span></p>
             </div>
             <div class="w-full max-w-xs bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-10 text-center">
                 <div id="captcha-display" class="text-4xl font-black tracking-[0.4em] text-gray-300 italic select-none">LOADING</div>
@@ -438,12 +464,22 @@
     <!-- 🧮 MATH QUIZ VIEW -->
     <section id="view-quiz" class="view hidden-view bg-white flex flex-col">
         <header class="flex items-center px-4 h-16 border-b">
-            <button onclick="switchTab('hub')" class="w-10 h-10 flex items-center justify-center text-black">
+            <button onclick="handleNavClick(event, 'hub')" class="w-10 h-10 flex items-center justify-center text-black">
                 <i class="fas fa-arrow-left text-lg"></i>
             </button>
             <h2 class="ml-2 font-bold text-lg uppercase tracking-widest">Math Quiz Hub</h2>
         </header>
         <div class="flex-1 p-8 flex flex-col items-center justify-center space-y-10">
+            <!-- Dynamic Top Banner Ad Slot -->
+            <div id="math-top-ad-slot" class="w-full min-h-[60px] flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 overflow-hidden">
+                <span class="text-[9px] text-gray-300 font-bold uppercase tracking-widest">Premium Advertisement</span>
+            </div>
+
+            <div class="text-center">
+                <p class="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Solve & Earn ₹0.50 Instantly</p>
+                <p class="text-gray-300 text-[9px] mt-1">Remaining Today: <span id="math-remaining" class="text-black font-bold">100</span></p>
+            </div>
+
             <div class="flex items-center justify-center space-x-6">
                 <span id="quiz-n1" class="text-6xl font-black text-[#0A4D2E]">0</span>
                 <span class="text-4xl font-bold text-[#00C853]">+</span>
@@ -453,23 +489,28 @@
                 <div class="input-card flex items-center px-6 h-16">
                     <input type="number" id="input-quiz" placeholder="Your Answer" class="w-full bg-transparent outline-none font-black text-center text-3xl">
                 </div>
-                <button onclick="submitQuiz()" class="w-full h-16 btn-vibrant rounded-2xl font-black tracking-widest shadow-xl shadow-green-200">
+                <button id="btn-submit-quiz" onclick="submitQuiz()" class="w-full h-16 btn-vibrant rounded-2xl font-black tracking-widest shadow-xl shadow-green-200">
                     SUBMIT ANSWER
                 </button>
             </div>
-            <p class="text-gray-400 font-bold text-xs uppercase tracking-widest">Correct answer gives ₹0.02</p>
+            <p id="math-cooldown-text" class="text-orange-400 font-bold text-[10px] uppercase tracking-widest hidden">Next question in <span id="math-timer">10</span>s</p>
         </div>
     </section>
 
     <!-- 🎨 SCRATCH VIEW -->
     <section id="view-scratch" class="view hidden-view bg-white flex flex-col">
         <header class="flex items-center px-4 h-16 border-b">
-            <button onclick="switchTab('hub')" class="w-10 h-10 flex items-center justify-center text-black">
+            <button onclick="handleNavClick(event, 'hub')" class="w-10 h-10 flex items-center justify-center text-black">
                 <i class="fas fa-arrow-left text-lg"></i>
             </button>
             <h2 class="ml-2 font-bold text-lg uppercase tracking-widest">Golden Scratch</h2>
         </header>
-        <div class="flex-1 p-8 flex flex-col items-center justify-center space-y-12">
+        <div class="flex-1 p-8 flex flex-col items-center justify-center space-y-10">
+            <!-- Dynamic Top Banner Ad Slot -->
+            <div id="scratch-top-ad-slot" class="w-full min-h-[60px] flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 overflow-hidden">
+                <span class="text-[9px] text-gray-300 font-bold uppercase tracking-widest">Premium Advertisement</span>
+            </div>
+
             <p class="text-gray-400 font-medium">Remaining Today: <span id="scratch-remaining" class="text-black font-bold">20</span></p>
 
             <div class="relative w-full max-w-[320px] aspect-square bg-[#FFD700] rounded-2xl shadow-xl flex items-center justify-center overflow-hidden">
@@ -565,7 +606,43 @@
         </header>
 
         <div class="p-6 space-y-8">
+            <!-- 1. Category-Wise Earnings Breakdown -->
+            <div class="grid grid-cols-1 gap-4">
+                <div class="bg-white p-5 rounded-3xl border border-gray-100 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-lg"><i class="fas fa-keyboard"></i></div>
+                        <div>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-tight">Captcha Solver Earnings</p>
+                            <h5 class="text-lg font-black" id="breakdown-captcha">₹0.00</h5>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-100 text-xs"></i>
+                </div>
+                <div class="bg-white p-5 rounded-3xl border border-gray-100 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center text-lg"><i class="fas fa-spinner"></i></div>
+                        <div>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-tight">Lucky Spin Earnings</p>
+                            <h5 class="text-lg font-black" id="breakdown-spin">₹0.00</h5>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-100 text-xs"></i>
+                </div>
+                <div class="bg-white p-5 rounded-3xl border border-gray-100 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg"><i class="fas fa-tasks"></i></div>
+                        <div>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-tight">CPA Task Wall Earnings</p>
+                            <h5 class="text-lg font-black" id="breakdown-cpa">₹0.00</h5>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-100 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- 2. Withdrawal Form -->
             <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest">Request Cashout</h4>
                 <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Withdraw to UPI ID</label>
                     <div class="flex items-center input-card px-5 h-16 mt-1">
@@ -574,7 +651,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1" id="label-min-wd">Amount (Min ₹100)</label>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1" id="label-min-wd">Amount (Min ₹500)</label>
                     <div class="flex items-center input-card px-5 h-16 mt-1">
                         <i class="fas fa-indian-rupee-sign text-gray-300 mr-4"></i>
                         <input type="number" id="input-wd-amount" placeholder="0.00" class="flex-1 bg-transparent outline-none font-black text-xl">
@@ -583,10 +660,14 @@
                 <button onclick="submitWithdraw()" class="w-full h-16 btn-vibrant rounded-2xl font-black tracking-widest shadow-xl shadow-green-200">CONFIRM WITHDRAWAL</button>
             </div>
 
+            <!-- 3. Withdrawal History Ledger -->
             <div class="space-y-4">
-                <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest ml-1">Transaction History</h4>
-                <div id="transactions-container" class="space-y-3">
-                    <!-- Tx list injected by JS -->
+                <div class="flex items-center justify-between ml-1">
+                    <h4 class="font-black text-gray-800 uppercase text-xs tracking-widest">Withdrawal History & Status Ledger</h4>
+                    <span class="text-[9px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-bold">LIVE SYNC</span>
+                </div>
+                <div id="withdrawals-ledger-container" class="space-y-3">
+                    <!-- Dynamic Ledger Items -->
                 </div>
             </div>
         </div>
@@ -594,19 +675,19 @@
 
     <!-- Bottom Tab Navigation -->
     <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 tab-bar flex items-center justify-around z-[100] hidden">
-        <button onclick="switchTab('home')" id="tab-home" class="flex flex-col items-center space-y-1 text-[#0A4D2E]">
+        <button onclick="handleNavClick(event, 'home')" id="tab-home" class="flex flex-col items-center space-y-1 text-[#0A4D2E] relative z-[110]">
             <i class="fas fa-house text-lg"></i>
             <span class="text-[9px] font-bold uppercase">Home</span>
         </button>
-        <button onclick="switchTab('hub')" id="tab-hub" class="flex flex-col items-center space-y-1 text-gray-400">
+        <button onclick="handleNavClick(event, 'hub')" id="tab-hub" class="flex flex-col items-center space-y-1 text-gray-400 relative z-[110]">
             <i class="fas fa-rocket text-lg"></i>
             <span class="text-[9px] font-bold uppercase">Tasks</span>
         </button>
-        <button onclick="switchTab('wallet')" id="tab-wallet" class="flex flex-col items-center space-y-1 text-gray-400">
+        <button onclick="handleNavClick(event, 'wallet')" id="tab-wallet" class="flex flex-col items-center space-y-1 text-gray-400 relative z-[110]">
             <i class="fas fa-wallet text-lg"></i>
             <span class="text-[9px] font-bold uppercase">Wallet</span>
         </button>
-        <button onclick="switchTab('refer')" id="tab-refer" class="flex flex-col items-center space-y-1 text-gray-400">
+        <button onclick="handleNavClick(event, 'refer')" id="tab-refer" class="flex flex-col items-center space-y-1 text-gray-400 relative z-[110]">
             <i class="fas fa-user-circle text-lg"></i>
             <span class="text-[9px] font-bold uppercase">Profile</span>
         </button>
@@ -652,14 +733,17 @@
 
         // --- GLOBAL POPUNDER INTERCEPTION (Monetag) ---
         // Triggers once per session on the very first user interaction
-        document.body.addEventListener('click', () => {
+        document.body.addEventListener('click', (e) => {
+            // BLOCK hijacking during passive text inputs or button actions
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('button') || e.target.closest('a')) return;
+
             if (!sessionStorage.getItem('popunder_executed')) {
                 const popunderUrl = 'https://omg10.com/4/11349170';
                 console.log("Global Interception: Executing session popunder...");
                 window.open(popunderUrl, '_blank', 'noopener,noreferrer');
                 sessionStorage.setItem('popunder_executed', 'true');
             }
-        }, { once: false }); // We use a flag instead of {once: true} to ensure we catch the first real tap
+        }, { once: false });
 
         let currentUser = null;
         let userData = null;
@@ -667,7 +751,9 @@
             min_withdrawal_limit: 500, // Hardcoded in previous turn
             rewarded_video_rate: 0.05,
             scratch_daily_limit: 20,
-            scratch_max_reward: 1.0
+            scratch_max_reward: 1.0,
+            captcha_daily_limit: 100,
+            math_daily_limit: 100 // Added daily limit for Math Quiz
         };
         let confirmationResult = null;
         let authType = 'EMAIL'; // Default to EMAIL, MOBILE Deactivated
@@ -786,6 +872,9 @@
                     uid, name,
                     wallet_balance: 0,
                     total_earned: 0,
+                    captcha_earnings: 0,
+                    spin_earnings: 0,
+                    cpa_earnings: 0,
                     referral_code: myCode,
                     referred_by: pId,
                     referred_by_level2: gpId,
@@ -830,28 +919,20 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUser = user;
-                hideAllViews();
-                document.getElementById('view-dashboard').classList.add('active-view');
+                // Transition seamlessly into the main layout dashboard
+                internalSwitchView('dashboard', false);
                 document.getElementById('bottom-nav').classList.remove('hidden');
                 initSync();
                 initWebAds(); // Initialize Ads for Authenticated Session
             } else {
                 currentUser = null;
-                hideAllViews();
+                internalSwitchView('splash', false);
+                document.getElementById('bottom-nav').classList.add('hidden');
                 setTimeout(() => {
-                    document.getElementById('view-splash').classList.add('hidden-view');
-                    document.getElementById('view-auth').classList.add('active-view');
-                    document.getElementById('bottom-nav').classList.add('hidden');
+                    internalSwitchView('auth', false);
                 }, 2000);
             }
         });
-
-        function hideAllViews() {
-            document.querySelectorAll('.view').forEach(v => {
-                v.classList.remove('active-view');
-                v.classList.add('hidden-view');
-            });
-        }
 
         // --- DATA SYNC & UI ---
         function initSync() {
@@ -872,26 +953,37 @@
                 updateGlobalUI();
             });
 
-            // Transactions
-            const qTx = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("timestamp", "desc"), limit(15));
+            // Withdrawal History Ledger (Sub-collection)
+            const qTx = query(collection(doc(db, "users", currentUser.uid), "withdrawals"), orderBy("timestamp", "desc"), limit(15));
             onSnapshot(qTx, snap => {
-                const container = document.getElementById('transactions-container');
-                if (snap.empty) { container.innerHTML = '<p class="text-center text-gray-300 text-xs py-10 italic">No activity yet.</p>'; return; }
+                const container = document.getElementById('withdrawals-ledger-container');
+                if (snap.empty) {
+                    container.innerHTML = '<div class="bg-white p-6 rounded-2xl border border-dashed border-gray-100 text-center"><p class="text-gray-300 text-xs italic">No past withdrawal records found.</p></div>';
+                    return;
+                }
                 container.innerHTML = snap.docs.map(d => {
                     const tx = d.data();
-                    const isCredit = tx.type === 'CREDIT';
+                    const status = tx.status || 'Pending';
+                    const isApproved = status === 'SUCCESS' || status === 'Approved';
+                    const date = tx.timestamp ? tx.timestamp.toDate().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Pending...';
+
                     return `
-                        <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-gray-50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 ${isCredit ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'} rounded-xl flex items-center justify-center">
-                                    <i class="fas ${isCredit ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                        <div class="bg-white p-5 rounded-2xl flex items-center justify-between border border-gray-50 shadow-sm">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-gray-50 text-gray-400 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-receipt"></i>
                                 </div>
                                 <div>
-                                    <p class="font-bold text-xs">${tx.description || 'System Entry'}</p>
-                                    <p class="text-[9px] text-gray-400 font-bold uppercase">${tx.status || 'Success'}</p>
+                                    <p class="font-bold text-xs text-gray-800">₹${(tx.amount || 0).toFixed(2)} Request</p>
+                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">${tx.upiId || 'UPI Payout'}</p>
+                                    <p class="text-[8px] text-gray-300 font-medium">${date}</p>
                                 </div>
                             </div>
-                            <p class="font-black ${isCredit ? 'text-emerald-600' : 'text-red-600'}">₹${(tx.amount || 0).toFixed(2)}</p>
+                            <div class="text-right">
+                                <span class="${isApproved ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'} px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter shadow-sm">
+                                    ${status}
+                                </span>
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -904,63 +996,87 @@
         async function loadAutomatedLiveOffers() {
             const container = document.getElementById('tasks-container');
 
-            // CPAGrip master key is now abstracted for deployment environment
-            const masterUserId = "2543099";
-            const masterApiKey = "f86d76c5e9d8e0a1174f8a79f5f78cba";
-            const feedUrl = `https://www.cpagrip.com/common/offer_feed_rss.php?user_id=${masterUserId}&key=${masterApiKey}&ip=&tracking_id=`;
+            // 1. CPAGRIP CONFIG (RSS Feed)
+            const gripFeedUrl = `https://www.cpagrip.com/common/offer_feed_rss.php?user_id=2543099&key=f86d76c5e9d8e0a1174f8a79f5f78cba&ip=&tracking_id=`;
 
-            // Note: Browser CORS restrictions usually block direct CPAGrip XML fetch.
-            // We use a CORS proxy to ensure the automated feed loads directly in the user dashboard.
-            const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(feedUrl);
+            // 2. CPALEAD CONFIG (JSON API via AllOrigins Proxy Wrapper)
+            const leadApiUrl = "https://www.cpalead.com/api/offers?id=3355587";
+            const proxyWrapperUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(leadApiUrl)}`;
+
+            const rawProxy = "https://api.allorigins.win/raw?url=";
 
             try {
-                const response = await fetch(proxyUrl);
-                const xmlText = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-                const items = xmlDoc.getElementsByTagName("item");
+                // Concurrent Fetching
+                const [gripRes, leadRes] = await Promise.allSettled([
+                    fetch(rawProxy + encodeURIComponent(gripFeedUrl)).then(r => r.text()),
+                    fetch(proxyWrapperUrl).then(r => r.json())
+                ]);
 
-                if (!items || items.length === 0) {
-                    container.innerHTML = '<p class="text-center text-gray-400 text-xs py-4 italic">No live offers available right now. Check back soon!</p>';
+                let allOffers = [];
+
+                // --- PARSE CPAGRIP (RSS/XML) ---
+                if (gripRes.status === 'fulfilled') {
+                    const xmlDoc = new DOMParser().parseFromString(gripRes.value, "text/xml");
+                    const items = xmlDoc.getElementsByTagName("item");
+                    for (let i = 0; i < Math.min(items.length, 3); i++) {
+                        const payout = parseFloat(items[i].getElementsByTagName("payout")?.[0]?.textContent || "0");
+                        const reward = ((payout * 85) * 0.50).toFixed(2);
+                        allOffers.push({
+                            title: items[i].getElementsByTagName("title")[0]?.textContent || "Premium Offer",
+                            link: items[i].getElementsByTagName("link")[0]?.textContent || "#",
+                            reward: reward,
+                            source: 'CPAGrip'
+                        });
+                    }
+                }
+
+                // --- PARSE CPALEAD (JSON API via contents string) ---
+                if (leadRes.status === 'fulfilled' && leadRes.value.contents) {
+                    try {
+                        const data = JSON.parse(leadRes.value.contents);
+                        const offers = data.offers || [];
+
+                        // Extract Top 4 High-Paying CPALead Offers
+                        offers.slice(0, 4).forEach(offer => {
+                            const amount = parseFloat(offer.amount || offer.payout || 0);
+                            const reward = ((amount * 85) * 0.50).toFixed(2);
+                            allOffers.push({
+                                title: offer.title || "VIP Task",
+                                link: offer.link || "#",
+                                reward: reward,
+                                source: 'CPALead'
+                            });
+                        });
+                    } catch (e) { console.error("CPALead JSON Parse Error:", e); }
+                }
+
+                if (allOffers.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-400 text-xs py-4 italic">Synchronizing task streams...</p>';
                     return;
                 }
 
-                let htmlContent = '';
-                const maxOffers = 4;
-
-                for (let i = 0; i < Math.min(items.length, maxOffers); i++) {
-                    const title = items[i].getElementsByTagName("title")[0]?.textContent || "Premium Offer";
-                    const link = items[i].getElementsByTagName("link")[0]?.textContent || "#";
-                    const payoutStr = items[i].getElementsByTagName("payout")?.[0]?.textContent || "0.20";
-
-                    // INR Conversion Engine (USD * 85)
-                    const usdAmount = parseFloat(payoutStr);
-                    const totalInrPayout = usdAmount * 85;
-
-                    // User Reward Allocation (Exactly 50% of total Payout)
-                    const userReward = (totalInrPayout * 0.50).toFixed(2);
-
-                    htmlContent += `
-                        <div class="bg-white p-5 rounded-3xl border border-gray-50 flex items-center justify-between shadow-sm hover:border-[#00C853]/20 transition-all">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 bg-emerald-50 text-[#128C55] rounded-2xl flex items-center justify-center">
-                                    <i class="fas fa-bolt text-lg"></i>
-                                </div>
-                                <div class="flex-1 pr-2">
-                                    <h5 class="font-bold text-sm text-gray-800 line-clamp-1">${title}</h5>
-                                    <p class="text-[10px] text-[#00C853] font-black uppercase">Earn ₹${userReward}</p>
-                                </div>
+                // Render Merged Native Offers Grid
+                container.innerHTML = allOffers.map((offer, i) => `
+                    <div class="bg-white p-5 rounded-3xl border border-gray-50 flex items-center justify-between shadow-sm hover:border-[#00C853]/20 transition-all">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 ${offer.source === 'CPALead' ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-[#128C55]'} rounded-2xl flex items-center justify-center">
+                                <i class="fas ${offer.source === 'CPALead' ? 'fa-star' : 'fa-bolt'} text-lg"></i>
                             </div>
-                            <button onclick="window.open('${link}', '_blank'); logTask('CPA_${i}', ${userReward}, '${title}')" class="bg-[#0A4D2E] text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-green-900/10">Start</button>
+                            <div class="flex-1 pr-2">
+                                <div class="flex items-center space-x-2">
+                                    <h5 class="font-bold text-sm text-gray-800 line-clamp-1">${offer.title}</h5>
+                                    <span class="text-[7px] font-bold px-1 rounded bg-gray-100 text-gray-400 uppercase">${offer.source}</span>
+                                </div>
+                                <p class="text-[10px] text-[#00C853] font-black uppercase">Earn ₹${offer.reward}</p>
+                            </div>
                         </div>
-                    `;
-                }
-                container.innerHTML = htmlContent;
-                console.log("Automated Task Engine: Successfully parsed and rendered live RSS feed.");
+                        <button onclick="window.open('${offer.link}', '_blank'); logTask('${offer.source}_${i}', ${offer.reward}, '${offer.title}')" class="bg-[#0A4D2E] text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-green-900/10">Start</button>
+                    </div>
+                `).join('');
 
             } catch (error) {
-                console.error("Automated Task Engine Error:", error);
-                container.innerHTML = '<p class="text-center text-red-400 text-xs py-4 italic">Failed to load live tasks. Please refresh.</p>';
+                console.error("Task Engine Error:", error);
+                container.innerHTML = '<p class="text-center text-red-400 text-xs py-4 italic">Failed to bridge task streams. Please refresh.</p>';
             }
         }
 
@@ -979,6 +1095,11 @@
             document.getElementById('dash-total-earn').innerText = `₹${total}`;
             document.getElementById('prof-total').innerText = `₹${total}`;
 
+            // Category-Wise Earnings Breakdown
+            document.getElementById('breakdown-captcha').innerText = `₹${(userData.captcha_earnings || 0).toFixed(2)}`;
+            document.getElementById('breakdown-spin').innerText = `₹${(userData.spin_earnings || 0).toFixed(2)}`;
+            document.getElementById('breakdown-cpa').innerText = `₹${(userData.cpa_earnings || 0).toFixed(2)}`;
+
             document.getElementById('prof-ref-code').innerText = userData.referral_code || '------';
 
             const spinRem = userData.last_spin_date === today ? (5 - userData.daily_spin_count) : 5;
@@ -986,7 +1107,18 @@
 
             const scratchLimit = adminSettings.scratch_daily_limit || 20;
             const scratchRem = userData.last_task_date === today ? (scratchLimit - (userData.daily_scratch_count || 0)) : scratchLimit;
-            document.getElementById('scratch-remaining').innerText = Math.max(0, scratchRem);
+            const scratchRemEl = document.getElementById('scratch-remaining');
+            if (scratchRemEl) scratchRemEl.innerText = Math.max(0, scratchRem);
+
+            const captchaLimit = adminSettings.captcha_daily_limit || 100;
+            const captchaRem = userData.last_task_date === today ? (captchaLimit - (userData.daily_captcha_count || 0)) : captchaLimit;
+            const captchaRemEl = document.getElementById('captcha-remaining');
+            if (captchaRemEl) captchaRemEl.innerText = Math.max(0, captchaRem);
+
+            const mathLimit = adminSettings.math_daily_limit || 100;
+            const mathRem = userData.last_task_date === today ? (mathLimit - (userData.daily_quiz_count || 0)) : mathLimit;
+            const mathRemEl = document.getElementById('math-remaining');
+            if (mathRemEl) mathRemEl.innerText = Math.max(0, mathRem);
 
             // Summary Stats
             document.getElementById('sum-tasks').innerText = userData.daily_scratch_count || 0;
@@ -1000,22 +1132,102 @@
             }
         }
 
-        // --- NAVIGATION ---
-        window.switchTab = (id) => {
-            hideAllViews();
-            document.getElementById(`view-${id}`).classList.remove('hidden-view');
-            document.getElementById(`view-${id}`).classList.add('active-view');
+        // --- NAVIGATION & ROUTING ---
+        // Initialize history state on load
+        if (!history.state) {
+            history.replaceState({ view: 'home' }, "Home", "");
+        }
 
-            // Update Tab Icons
-            document.querySelectorAll('#bottom-nav button').forEach(b => b.classList.replace('text-[#0A4D2E]', 'text-gray-400'));
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.view) {
+                console.log("Navigation: Popstate triggered, reverting to:", event.state.view);
+                internalSwitchView(event.state.view, false);
+            } else {
+                internalSwitchView('home', false);
+            }
+        });
+
+        // 1. ENFORCE EVENT ISOLATION (Refactored Click Handler)
+        window.handleNavClick = (event, id) => {
+            // Absolute first lines of execution to prevent bubbling/collisions
+            event.preventDefault();
+            event.stopPropagation();
+
+            internalSwitchView(id, true);
+        };
+
+        window.switchTab = (id) => {
+            internalSwitchView(id, true);
+        };
+
+        window.switchView = (id) => {
+            internalSwitchView(id, true);
+        };
+
+        function internalSwitchView(id, pushToHistory = true) {
+            console.log("Router: Navigating to", id);
+
+            // 2. FLUSH ACTIVE TASK ROUTERS & STATE LOCKS
+            // Clear any pending timers from video flow or rewards
+            if (window.videoInterval) {
+                clearInterval(window.videoInterval);
+                window.videoInterval = null;
+            }
+            // Hide ad modal if left open during transition
+            const adModal = document.getElementById('video-ad-modal');
+            if (adModal) adModal.classList.add('hidden');
+
+            // 1. Hide All Views
+            document.querySelectorAll('.view').forEach(v => {
+                v.classList.remove('active-view');
+                v.classList.add('hidden-view');
+            });
+
+            // 2. Map View ID to Section
+            const targetView = document.getElementById(`view-${id}`);
+            if (targetView) {
+                targetView.classList.remove('hidden-view');
+                targetView.classList.add('active-view');
+            }
+
+            // 3. Update Bottom Nav UI
+            document.querySelectorAll('#bottom-nav button').forEach(b => {
+                b.classList.replace('text-[#0A4D2E]', 'text-gray-400');
+            });
             const activeTab = document.getElementById(`tab-${id}`);
             if (activeTab) activeTab.classList.replace('text-gray-400', 'text-[#0A4D2E]');
 
+            // 4. Handle History State
+            if (pushToHistory) {
+                history.pushState({ view: id }, id.charAt(0).toUpperCase() + id.slice(1), "");
+            }
+
+            // 5. Initialize View Engines
             if (id === 'spin') initWheel();
             if (id === 'scratch') initScratch();
             if (id === 'captcha') initCaptcha();
             if (id === 'quiz') initQuiz();
-        };
+            if (id === 'offerwall') initOfferwall();
+
+            // Force focus reset and state variable sync
+            document.activeElement.blur();
+        }
+
+        function initOfferwall() {
+            console.log("Offerwall: Initializing Premium Iframe View...");
+            const iframe = document.getElementById('offerwall-iframe');
+            const loader = document.getElementById('offerwall-loader');
+
+            if (iframe) {
+                loader.classList.remove('hidden');
+                // Constructing the VIP Offerwall Link from CPAlead
+                const offerwallUrl = "https://www.cpalead.com/mobile/display.php?id=3355587";
+                iframe.src = offerwallUrl;
+            }
+        }
+
+        // Optimize Layout Layering: Ensure nav bar is top-most
+        // (Handled via z-[100] in HTML and relative z-[110] on buttons)
 
         // --- HIGH-FREQUENCY EARNING LOOPS ---
 
@@ -1029,22 +1241,58 @@
                 input.value = "";
                 input.focus();
             }
+
+            // Refresh Dynamic Banner Ad on every reset/generation
+            refreshCaptchaBanner();
+        }
+
+        function refreshCaptchaBanner() {
+            console.log("Captcha Ad Engine: Refreshing top banner...");
+            const adSlot = document.getElementById('captcha-top-ad-slot');
+            if (!adSlot) return;
+
+            /*
+               PASTE YOUR ADSTERRA/MONETAG BANNER SCRIPT BELOW
+               -----------------------------------------------
+               To force a refresh, we clear and re-inject the script or iframe.
+            */
+
+            // Example re-injection logic:
+            // adSlot.innerHTML = '<!-- [PASTE NEW SCRIPT TAG HERE] -->';
         }
 
         window.submitCaptcha = async () => {
+            const today = new Date().toISOString().split('T')[0];
+            const currentCount = userData.last_task_date === today ? (userData.daily_captcha_count || 0) : 0;
+            const limit = adminSettings.captcha_daily_limit || 100;
+
+            if (currentCount >= limit) {
+                return alert("Daily Captcha limit reached! Come back tomorrow.");
+            }
+
             const code = document.getElementById('captcha-display').innerText;
             const input = document.getElementById('input-captcha').value.toUpperCase();
 
             if (input === code) {
-                // 1. Trigger Dynamic Ad Refresh (Placeholder for network tags)
-                refreshSocialAds();
+                console.log("Captcha Verified: Initializing Monetization Sequence...");
 
-                // 2. Increment Balance
-                await processReward('CAPTCHA', 0.50);
-                alert("Verified! ₹0.50 added.");
+                // 1. Mandatory Ad Popunder Verification
+                window.open('https://omg10.com/4/11349145', '_blank', 'noopener,noreferrer');
 
-                // 3. Reset Loop
-                initCaptcha();
+                // 2. Delayed Firestore Credit Action (800ms to ensure window context)
+                setTimeout(async () => {
+                    try {
+                        // Increment Balance (LOCKED at 0.50)
+                        await processReward('CAPTCHA', 0.50);
+                        alert("Verified! Reward Credited Successfully! ₹0.50 added to your wallet.");
+
+                        // 3. Reset Loop & Refresh Top Banner
+                        initCaptcha();
+                    } catch (e) {
+                        console.error("Captcha Reward Error:", e);
+                    }
+                }, 800);
+
             } else {
                 alert("Invalid Code. Try again.");
                 initCaptcha();
@@ -1053,6 +1301,22 @@
 
         // 🧮 MATH QUIZ HUB
         function initQuiz() {
+            const today = new Date().toISOString().split('T')[0];
+            const currentCount = userData.last_task_date === today ? (userData.daily_quiz_count || 0) : 0;
+            const limit = adminSettings.math_daily_limit || 100;
+
+            if (currentCount >= limit) {
+                document.getElementById('view-quiz').innerHTML = `
+                    <div class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                        <i class="fas fa-lock text-gray-200 text-6xl mb-4"></i>
+                        <h2 class="text-2xl font-black text-gray-800">Limit Reached!</h2>
+                        <p class="text-gray-400 font-medium">Daily limit of 100 Math Quizzes reached! Please return tomorrow.</p>
+                        <button onclick="switchTab('hub')" class="btn-vibrant px-8 py-3 rounded-xl font-bold">Go Back</button>
+                    </div>
+                `;
+                return;
+            }
+
             const n1 = Math.floor(Math.random() * 90) + 10;
             const n2 = Math.floor(Math.random() * 90) + 10;
             const el1 = document.getElementById('quiz-n1');
@@ -1064,6 +1328,16 @@
                 input.value = "";
                 input.focus();
             }
+
+            // Refresh Dynamic Banner Ad
+            refreshMathBanner();
+        }
+
+        function refreshMathBanner() {
+            console.log("Math Ad Engine: Refreshing top banner...");
+            const adSlot = document.getElementById('math-top-ad-slot');
+            if (!adSlot) return;
+            // logic to re-inject script/iframe same as captcha
         }
 
         window.submitQuiz = async () => {
@@ -1072,20 +1346,49 @@
             const ans = parseInt(document.getElementById('input-quiz').value);
 
             if (ans === (n1 + n2)) {
-                // 1. Trigger Dynamic Ad Refresh
-                refreshSocialAds();
+                const btn = document.getElementById('btn-submit-quiz');
+                btn.disabled = true;
 
-                // 2. Increment Balance
-                await processReward('QUIZ', 0.50);
-                alert("Correct! ₹0.50 added.");
+                console.log("Quiz Correct: Initializing Monetization...");
+                // 1. Trigger Direct Link Ad
+                window.open('https://omg10.com/4/11349145', '_blank', 'noopener,noreferrer');
 
-                // 3. Reset Loop
-                initQuiz();
+                // 2. Delayed Firestore Credit Action (800ms)
+                setTimeout(async () => {
+                    await processReward('QUIZ', 0.50);
+                    alert("Correct! Reward Credited: ₹0.50 added.");
+
+                    // 3. Start 10-second Cooldown
+                    startMathCooldown();
+                }, 800);
+
             } else {
                 alert("Wrong Answer. Try again.");
                 initQuiz();
             }
         };
+
+        function startMathCooldown() {
+            const btn = document.getElementById('btn-submit-quiz');
+            const text = document.getElementById('math-cooldown-text');
+            const timer = document.getElementById('math-timer');
+
+            btn.disabled = true;
+            text.classList.remove('hidden');
+            let timeLeft = 10;
+            timer.innerText = timeLeft;
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                timer.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    text.classList.add('hidden');
+                    initQuiz();
+                }
+            }, 1000);
+        }
 
         // 🔄 DYNAMIC AD REFRESH ENGINE
         function refreshSocialAds() {
@@ -1103,13 +1406,14 @@
             */
         }
 
-        // --- GAMES & REWARDS ---
-
         // 🎡 SPIN
         const segments = [
-            { amt: 1, label: "₹1", color: "#FF5252" }, { amt: 2, label: "₹2", color: "#448AFF" },
-            { amt: 0, label: "TRY AGAIN", color: "#FFD740" }, { amt: 5, label: "₹5", color: "#69F0AE" },
-            { amt: 3, label: "₹3", color: "#FFAB40" }, { amt: 0, label: "TRY AGAIN", color: "#E040FB" }
+            { amt: 0.5, label: "₹0.5", color: "#FF5252" },
+            { amt: 1.0, label: "₹1", color: "#448AFF" },
+            { amt: 1.5, label: "₹1.5", color: "#FFD740" },
+            { amt: 2.0, label: "₹2", color: "#69F0AE" },
+            { amt: 5.0, label: "₹5", color: "#FFAB40" },
+            { amt: 0, label: "TRY AGAIN", color: "#E040FB" }
         ];
 
         function initWheel() {
@@ -1143,13 +1447,14 @@
             // Launch network asset redirect
             if (adUrl) window.open(adUrl, '_blank', 'noopener,noreferrer');
 
-            const interval = setInterval(() => {
+            window.videoInterval = setInterval(() => {
                 timeLeft--;
                 timerEl.innerText = timeLeft;
                 progressEl.style.width = `${((30 - timeLeft) / 30) * 100}%`;
 
                 if (timeLeft <= 0) {
-                    clearInterval(interval);
+                    clearInterval(window.videoInterval);
+                    window.videoInterval = null;
                     modal.classList.add('hidden');
                     onComplete();
                 }
@@ -1164,18 +1469,30 @@
             const btn = document.getElementById('btn-play-spin');
             btn.disabled = true; btn.innerText = "INITIALIZING AD...";
 
-            // Trigger 30s Video Flow before Spinning
+            // 1. PRE-SELECT REWARD FROM SYNCED ARRAY
+            const idx = Math.floor(Math.random() * segments.length);
+            const selectedReward = segments[idx].amt;
+
+            // 2. TRIGGER 30S VIDEO FLOW
             startVideoFlow(async () => {
                 btn.innerText = "SPINNING...";
                 const wheel = document.getElementById('wheel');
-                const idx = Math.floor(Math.random() * 6);
-                const deg = (360 * 6) + (360 - (idx * 60) - 30);
+
+                // 3. CALC ROTATION TO LAND EXACTLY ON SELECTED SLICE
+                // Pointer is at 270 degrees. Slice middle is (idx * 60 + 30).
+                // Target Rotation = 270 - (idx * 60 + 30)
+                const targetRotation = 270 - (idx * 60 + 30);
+                const deg = (360 * 10) + targetRotation; // 10 full turns for momentum
                 wheel.style.transform = `rotate(${deg}deg)`;
 
                 setTimeout(async () => {
-                    // APPLY FLAT CREDIT MODIFIER: +2.00 INR per cycle
-                    await processReward('SPIN', 2.00);
-                    alert("🎉 action cycle complete! ₹2.00 added to your wallet.");
+                    // 4. CREDIT EXACT ARRAY VALUE
+                    await processReward('SPIN', selectedReward);
+                    if (selectedReward > 0) {
+                        alert(`🎉 Congratulations! ₹${selectedReward.toFixed(2)} added to your wallet.`);
+                    } else {
+                        alert("Better luck next time! Try again.");
+                    }
                     btn.disabled = false; btn.innerText = "SPIN NOW";
                 }, 4000);
             }, 'https://omg10.com/4/11349145');
@@ -1183,6 +1500,22 @@
 
         // 🎨 SCRATCH
         function initScratch() {
+            const today = new Date().toISOString().split('T')[0];
+            const currentCount = userData.last_task_date === today ? (userData.daily_scratch_count || 0) : 0;
+            const limit = adminSettings.scratch_daily_limit || 20;
+
+            if (currentCount >= limit) {
+                document.getElementById('view-scratch').innerHTML = `
+                    <div class="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                        <i class="fas fa-lock text-gray-200 text-6xl mb-4"></i>
+                        <h2 class="text-2xl font-black text-gray-800">Limit Reached!</h2>
+                        <p class="text-gray-400 font-medium">Daily limit of 20 Scratch Cards reached! Please return tomorrow.</p>
+                        <button onclick="switchTab('hub')" class="btn-vibrant px-8 py-3 rounded-xl font-bold">Go Back</button>
+                    </div>
+                `;
+                return;
+            }
+
             const canvas = document.getElementById('scratch-canvas');
             const ctx = canvas.getContext('2d');
             document.getElementById('scratch-reveal-area').classList.add('hidden');
@@ -1215,13 +1548,30 @@
                     document.getElementById('btn-scratch-claim').classList.remove('hidden');
                 }
             };
+
+            // Refresh Top Banner Ad
+            refreshScratchBanner();
+        }
+
+        function refreshScratchBanner() {
+            console.log("Scratch Ad Engine: Refreshing top banner...");
+            const adSlot = document.getElementById('scratch-top-ad-slot');
+            if (!adSlot) return;
         }
 
         window.claimScratch = async () => {
             const val = parseFloat(document.getElementById('scratch-amount').innerText.replace('₹',''));
-            await processReward('SCRATCH', val);
-            alert(`Collected ₹${val}`);
-            switchTab('hub');
+
+            console.log("Scratch Successful: Initializing Monetization...");
+            // 1. Trigger Direct Link Ad
+            window.open('https://omg10.com/4/11349145', '_blank', 'noopener,noreferrer');
+
+            // 2. Delayed Firestore Credit Action (800ms)
+            setTimeout(async () => {
+                await processReward('SCRATCH', val);
+                alert(`Reward Credited: ₹${val.toFixed(2)} added to wallet.`);
+                switchTab('hub');
+            }, 800);
         };
 
         // --- CORE PROCESSOR ---
@@ -1231,15 +1581,37 @@
             await runTransaction(db, async (t) => {
                 const s = await t.get(ref);
                 const d = s.data();
-                let up = { wallet_balance: increment(amt), total_earned: increment(amt), last_task_date: today };
+
+                // Initialize update object with global increments
+                let up = {
+                    wallet_balance: increment(amt),
+                    total_earned: increment(amt),
+                    last_task_date: today
+                };
+
+                // Increment Specific Category Sub-metrics
+                if (type === 'CAPTCHA' || type === 'QUIZ') {
+                    up.captcha_earnings = increment(amt);
+                } else if (type === 'SPIN' || type === 'SCRATCH') {
+                    up.spin_earnings = increment(amt);
+                } else if (type === 'VIDEO_HUB' || type.startsWith('CPA_')) {
+                    up.cpa_earnings = increment(amt);
+                }
+
                 if (type === 'SPIN') {
                     const c = d.last_spin_date === today ? d.daily_spin_count : 0;
                     up.daily_spin_count = c + 1; up.last_spin_date = today;
                 } else if (type === 'SCRATCH') {
                     const c = d.last_task_date === today ? d.daily_scratch_count : 0;
                     up.daily_scratch_count = c + 1;
+                } else if (type === 'CAPTCHA') {
+                    const c = d.last_task_date === today ? (d.daily_captcha_count || 0) : 0;
+                    up.daily_captcha_count = c + 1;
                 }
+
                 t.update(ref, up);
+
+                // Optional: Log to global withdrawals as a CREDIT for admin tracking
                 t.set(doc(collection(db, "withdrawals")), {
                     userId: currentUser.uid, amount: amt, type: 'CREDIT', status: 'SUCCESS',
                     timestamp: serverTimestamp(), description: `Earned via ${type}`
@@ -1267,8 +1639,13 @@
             const ref = doc(db, "users", currentUser.uid);
             const compRef = doc(collection(ref, "completed_tasks"), id);
             if ((await getDoc(compRef)).exists()) return alert("Already done.");
+
             await runTransaction(db, async (t) => {
-                t.update(ref, { wallet_balance: increment(rew), total_earned: increment(rew) });
+                t.update(ref, {
+                    wallet_balance: increment(rew),
+                    total_earned: increment(rew),
+                    cpa_earnings: increment(rew) // Increments category sub-metric
+                });
                 t.set(compRef, { timestamp: serverTimestamp(), reward: rew, title: tit });
                 t.set(doc(collection(db, "withdrawals")), {
                     userId: currentUser.uid, amount: rew, type: 'CREDIT', status: 'SUCCESS',
@@ -1290,49 +1667,33 @@
             if (!upi.includes('@') || amt < 500 || amt > userData.wallet_balance) return alert("Invalid entry or insufficient balance (Min ₹500).");
 
             await runTransaction(db, async (t) => {
+                // 1. Debit User Balance
                 t.update(doc(db, "users", currentUser.uid), { wallet_balance: increment(-amt) });
-                t.set(doc(collection(db, "withdrawals")), {
-                    userId: currentUser.uid, amount: amt, upiId: upi, type: 'DEBIT', status: 'Pending',
-                    timestamp: serverTimestamp(), description: `Withdrawal to ${upi}`
-                });
+
+                // 2. Add to Global Withdrawals (For Admin)
+                const globalWdRef = doc(collection(db, "withdrawals"));
+                const withdrawalData = {
+                    userId: currentUser.uid,
+                    amount: amt,
+                    upiId: upi,
+                    type: 'DEBIT',
+                    status: 'Pending',
+                    timestamp: serverTimestamp(),
+                    description: `Withdrawal to ${upi}`
+                };
+                t.set(globalWdRef, withdrawalData);
+
+                // 3. Add to User Sub-collection (For Personal Ledger)
+                const userWdRef = doc(collection(doc(db, "users", currentUser.uid), "withdrawals"));
+                t.set(userWdRef, withdrawalData);
             });
-            alert("Request Submitted!");
+            alert("Request Submitted! Check the ledger below for status updates.");
             document.getElementById('input-wd-amount').value = "";
         };
 
         window.copyRefer = () => {
             navigator.clipboard.writeText(userData.referral_code);
             alert("Copied!");
-        };
-
-        window.triggerOfferwall = () => {
-            // SECURITY CHECK: Ensure user is authenticated via Firebase
-            if (!currentUser) {
-                alert("Please login to access the Offerwall.");
-                return;
-            }
-
-            console.log("Offerwall Activation: Invoking CPAGrip global overlay...");
-
-            /*
-               CPAGrip 'script_include' typically provides a global trigger.
-               Most common entry point is call_locker() or _at().
-               If the script is set to 'Auto-Display', it will show on load.
-               If set to 'On-Click', we invoke it here.
-            */
-            try {
-                if (typeof _at === 'function') {
-                    _at();
-                } else if (typeof call_locker === 'function') {
-                    call_locker();
-                } else {
-                    // Fallback if the script isn't fully ready yet
-                    alert("Tasks are loading... Please click again in 2 seconds.");
-                }
-            } catch (e) {
-                console.error("CPAGrip Error:", e);
-                alert("Task Engine connection failed. Please check your internet.");
-            }
         };
 
         window.triggerPremiumVideoHub = async () => {
