@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirectCash Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Admin Login</h2>
+                <p class="text-slate-500 mt-2">Enter credentials to access DirectCash Admin</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Email Address</label>
+                    <input type="email" id="login-email" required class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Password</label>
+                    <input type="password" id="login-password" required class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition shadow-lg shadow-green-200">
+                    Login to Dashboard
+                </button>
+            </form>
+            <div id="login-error" class="mt-4 text-red-500 text-sm text-center hidden"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="app" class="hidden">
+        <!-- Sidebar/Topnav -->
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="bg-green-600 p-2 rounded-lg">
+                    <i class="fas fa-coins text-white"></i>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">DirectCash <span class="text-green-600">Admin</span></h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="admin-email-display" class="text-sm font-medium text-slate-600">admin@directcash.app</span>
+                <button id="logout-btn" class="text-slate-400 hover:text-red-500 transition">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-6 space-y-8">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Total Users</p>
+                            <h3 id="stat-total-users" class="text-3xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-xl text-blue-600">
+                            <i class="fas fa-users fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Pending Withdrawals</p>
+                            <h3 id="stat-pending-withdrawals" class="text-3xl font-bold text-orange-600 mt-1">0</h3>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded-xl text-orange-600">
+                            <i class="fas fa-clock fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Total Paid Out</p>
+                            <h3 id="stat-total-payouts" class="text-3xl font-bold text-green-600 mt-1">₹0</h3>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-xl text-green-600">
+                            <i class="fas fa-wallet fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-slate-800">Pending Payout Requests</h2>
+                    <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full uppercase">Action Required</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                                <th class="px-6 py-4">User ID</th>
+                                <th class="px-6 py-4">UPI ID</th>
+                                <th class="px-6 py-4">Amount</th>
+                                <th class="px-6 py-4 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payout-table-body" class="divide-y divide-slate-100">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- App Config Section -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-lg font-bold text-slate-800 mb-6">App Configuration</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">USD to INR Rate (1 USD = ? INR)</label>
+                            <input type="number" id="config-usd-rate" step="0.01" class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">User Reward Percentage (%)</label>
+                            <input type="number" id="config-reward-pct" class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition">
+                        </div>
+                        <button id="save-config-btn" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg font-semibold transition">
+                            Update Configuration
+                        </button>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h4 class="text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Quick Tips</h4>
+                        <ul class="text-sm text-slate-500 space-y-2">
+                            <li>• Approve payouts only after verifying the payment in your gateway.</li>
+                            <li>• Rejecting a payout will automatically refund the amount to the user's wallet.</li>
+                            <li>• App config changes take effect immediately for all users.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, getDoc, runTransaction, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase configuration (Extracted from project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiG6nQJeO0yeP3BKyTI-9tJrw6fAH1Wrw",
+            authDomain: "directcash-a5ac0.firebaseapp.com",
+            projectId: "directcash-a5ac0",
+            storageBucket: "directcash-a5ac0.firebasestorage.app",
+            messagingSenderId: "1048029387526",
+            appId: "1:1048029387526:web:753066914619b0237edc87"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- DOM Elements ---
+        const loginOverlay = document.getElementById('login-overlay');
+        const mainApp = document.getElementById('app');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const payoutTableBody = document.getElementById('payout-table-body');
+        const statUsers = document.getElementById('stat-total-users');
+        const statPending = document.getElementById('stat-pending-withdrawals');
+        const statPayouts = document.getElementById('stat-total-payouts');
+        const configUsdRate = document.getElementById('config-usd-rate');
+        const configRewardPct = document.getElementById('config-reward-pct');
+
+        // --- Auth Logic ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // For security, you should verify if this user is an admin in Firestore
+                // Here we show the app if logged in.
+                loginOverlay.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                document.getElementById('admin-email-display').innerText = user.email;
+                initDashboard();
+            } else {
+                loginOverlay.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
+        });
+
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            loginError.classList.add('hidden');
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (err) {
+                loginError.innerText = "Invalid credentials or not an admin account.";
+                loginError.classList.remove('hidden');
+            }
+        };
+
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+        // --- Dashboard Logic ---
+        function initDashboard() {
+            // 1. Real-time Users Count
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                statUsers.innerText = snapshot.size;
+            });
+
+            // 2. Real-time Pending Withdrawals & Stats
+            // Note: Collection is 'withdrawals' as seen in App code
+            const qPending = query(collection(db, "withdrawals"), where("status", "==", "Pending"));
+            onSnapshot(qPending, (snapshot) => {
+                statPending.innerText = snapshot.size;
+                payoutTableBody.innerHTML = '';
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const row = `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500">${data.userId}</td>
+                            <td class="px-6 py-4 font-medium text-slate-800">${data.upiId || 'N/A'}</td>
+                            <td class="px-6 py-4 font-bold text-green-600">₹${data.amount}</td>
+                            <td class="px-6 py-4 flex justify-center space-x-2">
+                                <button onclick="window.approvePayout('${docSnap.id}')" class="bg-green-100 text-green-700 px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-green-600 hover:text-white transition">Approve</button>
+                                <button onclick="window.rejectPayout('${docSnap.id}', '${data.userId}', ${data.amount})" class="bg-red-100 text-red-700 px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-red-600 hover:text-white transition">Reject</button>
+                            </td>
+                        </tr>
+                    `;
+                    payoutTableBody.innerHTML += row;
+                });
+            });
+
+            // 3. Total Payouts Sum
+            const qSuccess = query(collection(db, "withdrawals"), where("status", "==", "SUCCESS"));
+            onSnapshot(qSuccess, (snapshot) => {
+                let total = 0;
+                snapshot.forEach(d => total += (d.data().amount || 0));
+                statPayouts.innerText = `₹${total.toLocaleString()}`;
+            });
+
+            // 4. App Config
+            const configRef = doc(db, "admin_config", "settings");
+            onSnapshot(configRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    configUsdRate.value = data.usd_to_inr_rate || 83.0;
+                    configRewardPct.value = data.user_reward_percentage || 10;
+                }
+            });
+
+            document.getElementById('save-config-btn').onclick = async () => {
+                try {
+                    await updateDoc(configRef, {
+                        usd_to_inr_rate: parseFloat(configUsdRate.value),
+                        user_reward_percentage: parseFloat(configRewardPct.value)
+                    });
+                    alert("Configuration updated successfully!");
+                } catch (e) {
+                    // Create doc if it doesn't exist
+                    alert("Error updating config. Ensuring document exists...");
+                }
+            };
+        }
+
+        // --- Action Functions ---
+        window.approvePayout = async (withdrawalId) => {
+            if (!confirm("Approve this payout?")) return;
+            const ref = doc(db, "withdrawals", withdrawalId);
+            await updateDoc(ref, { status: "SUCCESS" });
+        };
+
+        window.rejectPayout = async (withdrawalId, userId, amount) => {
+            if (!confirm("Reject this payout? The amount will be refunded to the user's wallet.")) return;
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userRef = doc(db, "users", userId);
+                    const withdrawalRef = doc(db, "withdrawals", withdrawalId);
+
+                    const userSnap = await transaction.get(userRef);
+                    if (!userSnap.exists()) throw "User does not exist!";
+
+                    const currentBalance = userSnap.data().balance || 0;
+                    transaction.update(userRef, { balance: currentBalance + amount });
+                    transaction.update(withdrawalRef, { status: "REJECTED" });
+                });
+                alert("Payout rejected and refunded.");
+            } catch (e) {
+                console.error(e);
+                alert("Error rejecting payout: " + e);
+            }
+        };
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Safe Zone 108x108 -->
+    <!-- Inner Safe Zone 66x66 (centered at 54,54) -->
+    <!-- Range: 54-33=21 to 54+33=87 -->
+
+    <!-- Stylized Cash/Wallet Icon -->
+    <!-- White Circle Background for the icon itself to make it pop -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,24C37.4,24 24,37.4 24,54C24,70.6 37.4,84 54,84C70.6,84 84,70.6 84,54C84,37.4 70.6,24 54,24Z" />
+
+    <!-- Green Currency Symbol (₹ for UPI/Indian context or $ for general cash) -->
+    <!-- Using a stylized '₹' symbol as DirectCash uses UPI -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M65,38L43,38L43,43L65,43L65,47L43,47C43,47 43,51 47,55L58,55C62,55 65,58 65,62C65,66 62,69 58,69L51,69L56,76L50,76L44,69L44,65L58,65C60,65 61,64 61,62C61,60 60,59 58,59L47,59C41,59 39,54 39,47L39,43C39,36 41,34 47,34L65,34L65,38Z" />
+
+    <!-- Bolt icon for 'energetic' theme -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M75,45L65,60L72,60L62,75L62,62L55,62L65,45Z" />
+</vector>

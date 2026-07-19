@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1048029387526",
+    "project_id": "directcash-a5ac0",
+    "storage_bucket": "directcash-a5ac0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048029387526:android:50a79a47c22c421e7edc87",
+        "android_client_info": {
+          "package_name": "com.directCash.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiG6nQJeO0yeP3BKyTI-9tJrw6fAH1Wrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048029387526:android:a4719d670a944cc07edc87",
+        "android_client_info": {
+          "package_name": "com.directcash.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiG6nQJeO0yeP3BKyTI-9tJrw6fAH1Wrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

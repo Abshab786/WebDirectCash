@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirectCash | Enterprise Admin Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        .sidebar-link.active { background: #3b82f6; color: white; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+        .tab-content { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .action-btn { transition: all 0.2s; }
+        .action-btn:active { scale: 0.95; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen">
+
+    <!-- Auth Layer -->
+    <div id="auth-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-xl hidden">
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-halved text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Admin Gate</h2>
+                <p class="text-slate-500 text-sm mt-2">Authorized Personnel Only</p>
+            </div>
+            <form id="auth-form" class="space-y-5">
+                <input type="email" id="auth-email" placeholder="Admin Email" required class="w-full px-5 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-blue-500/20">
+                <input type="password" id="auth-password" placeholder="Master Key" required class="w-full px-5 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-blue-500/20">
+                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-lg">Access Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div id="main-ui" class="flex min-h-screen hidden">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-slate-900 text-slate-400 flex flex-col fixed h-full z-50 shadow-2xl">
+            <div class="p-8 flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i class="fas fa-indian-rupee-sign text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-white font-extrabold text-xl">DirectCash</h1>
+                    <p class="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Control Center</p>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
+                <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest ml-4 mb-2">Monitor</p>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="sidebar-link active w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all text-left">
+                    <i class="fas fa-chart-line w-5"></i><span class="font-bold text-sm">Dashboard</span>
+                </button>
+                <button onclick="switchTab('payouts')" id="nav-payouts" class="sidebar-link w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all text-left">
+                    <i class="fas fa-wallet w-5"></i><span class="font-bold text-sm text-left">Pending Payouts</span>
+                </button>
+
+                <p class="text-[10px] font-bold text-slate-600 uppercase tracking-widest ml-4 mt-8 mb-2">Configuration</p>
+                <button onclick="switchTab('config')" id="nav-config" class="sidebar-link w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all text-left">
+                    <i class="fas fa-gears w-5"></i><span class="font-bold text-sm">System Config</span>
+                </button>
+                <button onclick="switchTab('ads')" id="nav-ads" class="sidebar-link w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all text-left">
+                    <i class="fas fa-tower-broadcast w-5"></i><span class="font-bold text-sm">Ad Switchboard</span>
+                </button>
+                <button onclick="switchTab('offerwalls')" id="nav-offerwalls" class="sidebar-link w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all text-left">
+                    <i class="fas fa-plug w-5"></i><span class="font-bold text-sm">Offerwalls</span>
+                </button>
+                <button onclick="switchTab('users')" id="nav-users" class="sidebar-link w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all text-left">
+                    <i class="fas fa-user-shield w-5"></i><span class="font-bold text-sm">User Management</span>
+                </button>
+            </nav>
+
+            <div class="p-6 border-t border-slate-800">
+                <button onclick="logOut()" class="w-full bg-slate-800 text-slate-300 py-3 rounded-xl font-bold hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95">
+                    Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 ml-72">
+            <header class="h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-10">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span class="text-[10px] font-extrabold text-emerald-600 uppercase">Server Status: Optimized</span>
+                    </div>
+                </div>
+                <div id="admin-info" class="text-xs font-bold text-slate-500"></div>
+            </header>
+
+            <div class="p-10 max-w-7xl mx-auto">
+
+                <!-- 📊 DASHBOARD -->
+                <section id="tab-dashboard" class="tab-content space-y-10">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Enterprise Overview</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-users"></i></div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Users</p>
+                            <h3 class="text-3xl font-extrabold text-slate-900" id="dash-users-count">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-clock"></i></div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending Payouts</p>
+                            <h3 class="text-3xl font-extrabold text-orange-500" id="dash-pending-wd">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-hand-holding-dollar"></i></div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Distributed</p>
+                            <h3 class="text-3xl font-extrabold text-emerald-600" id="dash-total-rev">₹0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-l-4 border-l-red-500">
+                            <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-gavel"></i></div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Seized Funds</p>
+                            <h3 class="text-3xl font-extrabold text-red-600" id="dash-seized-funds">₹0.00</h3>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 💰 PAYOUTS -->
+                <section id="tab-payouts" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Payout Queue</h2>
+                        <span class="bg-orange-100 text-orange-600 px-4 py-1.5 rounded-full text-xs font-black uppercase">Action Required</span>
+                    </div>
+                    <div class="bg-white rounded-3xl border overflow-hidden shadow-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 border-b">
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <th class="px-8 py-5">User Details</th>
+                                    <th class="px-8 py-5 text-center">Amount</th>
+                                    <th class="px-8 py-5">UPI ID</th>
+                                    <th class="px-8 py-5 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payout-list" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold">No pending withdrawals</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ⚙️ CONFIG -->
+                <section id="tab-config" class="tab-content hidden space-y-8">
+                    <h2 class="text-3xl font-black text-slate-900">System Parameters</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-white p-8 rounded-[2rem] border shadow-sm space-y-6">
+                            <h3 class="font-black text-slate-800 uppercase tracking-tight flex items-center"><i class="fas fa-sliders mr-2 text-blue-500"></i> Reward & Economy</h3>
+                            <div class="space-y-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Min Withdrawal Limit (₹)</label>
+                                    <input type="number" id="core-min-withdrawal" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-blue-500/10 font-bold">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Rewarded Video Payout Rate (₹)</label>
+                                    <input type="number" step="0.01" id="core-video-rate" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-blue-500/10 font-bold">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Daily Video Ad Cap</label>
+                                    <input type="number" id="core-ad-limit" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-blue-500/10 font-bold">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Platform Commission Fee (%)</label>
+                                    <input type="number" id="core-commission" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-blue-500/10 font-bold">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-8 rounded-[2rem] border shadow-sm space-y-6">
+                            <h3 class="font-black text-slate-800 uppercase tracking-tight flex items-center"><i class="fas fa-power-off mr-2 text-red-500"></i> Operational Status</h3>
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border">
+                                    <div>
+                                        <p class="font-bold text-slate-800">Maintenance Mode</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Locks User Application</p>
+                                    </div>
+                                    <select id="core-maint" class="bg-white border rounded-xl px-4 py-2 font-black text-sm outline-none">
+                                        <option value="false">OFF</option>
+                                        <option value="true">ON</option>
+                                    </select>
+                                </div>
+                                <button onclick="saveCoreSettings()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black hover:bg-blue-600 transition-all shadow-xl shadow-blue-500/10 active:scale-95">
+                                    COMMIT CORE UPDATES
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 📡 AD SWITCHBOARD -->
+                <section id="tab-ads" class="tab-content hidden space-y-8">
+                    <h2 class="text-3xl font-black text-slate-900">Master Network Switchboard</h2>
+                    <div class="bg-white p-8 rounded-[2rem] border shadow-sm space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <h3 class="font-black text-slate-800 uppercase tracking-tight">Network Config</h3>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Active Ad Network</label>
+                                    <select id="ads-active-net" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-emerald-500/10 font-black">
+                                        <option value="UNITY">UNITY ADS</option>
+                                        <option value="ADMOB">GOOGLE ADMOB</option>
+                                        <option value="APPLOVIN">APPLOVIN (MAX)</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Primary Game/App ID</label>
+                                    <input type="text" id="ads-app-id" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-emerald-500/10 font-bold" placeholder="Initialization Key">
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border">
+                                    <div>
+                                        <p class="font-bold text-slate-800">Global Ads Kill-Switch</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Enable/Disable All Ads</p>
+                                    </div>
+                                    <select id="ads-enabled" class="bg-white border rounded-xl px-4 py-2 font-black text-sm outline-none">
+                                        <option value="true">ENABLED</option>
+                                        <option value="false">DISABLED</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <h3 class="font-black text-slate-800 uppercase tracking-tight">Placement IDs</h3>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Rewarded Placement ID</label>
+                                    <input type="text" id="ads-rewarded-id" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-emerald-500/10 font-bold">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Interstitial Placement ID</label>
+                                    <input type="text" id="ads-interstitial-id" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-emerald-500/10 font-bold">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Banner Placement ID</label>
+                                    <input type="text" id="ads-banner-id" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border outline-none focus:ring-2 ring-emerald-500/10 font-bold">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="saveAdSettings()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/10 active:scale-95">
+                            APPLY GLOBAL AD OVERRIDES
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 👥 USERS -->
+                <section id="tab-users" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-3xl font-black text-slate-900">User Repository</h2>
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="user-search" placeholder="Search by UID..." class="pl-10 pr-6 py-2 rounded-xl border outline-none text-sm font-bold w-64 bg-white">
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-3xl border overflow-hidden shadow-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 border-b">
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <th class="px-8 py-5">Identity</th>
+                                    <th class="px-8 py-5 text-center">Wallet Balance</th>
+                                    <th class="px-8 py-5 text-center">Status</th>
+                                    <th class="px-8 py-5 text-center">Security</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-list" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 🔌 OFFERWALLS -->
+                <section id="tab-offerwalls" class="tab-content hidden space-y-8">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight">Network Handlers</h2>
+                    <div id="offerwall-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Dynamic Loading via JS -->
+                    </div>
+                    <div class="flex justify-center mt-10">
+                        <button onclick="saveOfferwallSettings()" class="bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-600 transition-all">Save Network Config</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, setDoc, deleteDoc, runTransaction, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiG6nQJeO0yeP3BKyTI-9tJrw6fAH1Wrw",
+            authDomain: "directcash-a5ac0.firebaseapp.com",
+            projectId: "directcash-a5ac0",
+            storageBucket: "directcash-a5ac0.firebasestorage.app",
+            messagingSenderId: "1048029387526",
+            appId: "1:1048029387526:web:753066914619b0237edc87"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- AUTH ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('main-ui').classList.remove('hidden');
+                document.getElementById('admin-info').innerText = user.email;
+                initCMS();
+            } else {
+                document.getElementById('auth-overlay').classList.remove('hidden');
+                document.getElementById('main-ui').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('auth-form').onsubmit = async e => {
+            e.preventDefault();
+            try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); }
+            catch(err) { alert("Authorization Failed: Invalid Credentials"); }
+        };
+        window.logOut = () => signOut(auth);
+
+        // --- CMS CORE ---
+        function initCMS() {
+            // Stats Listeners
+            onSnapshot(collection(db, "withdrawals"), s => {
+                let total = 0; s.forEach(d => { if(d.data().status === 'SUCCESS') total += d.data().amount; });
+                document.getElementById('dash-total-rev').innerText = `₹${total.toFixed(0)}`;
+            });
+
+            onSnapshot(query(collection(db, "withdrawals"), where("status", "==", "Pending")), s => {
+                document.getElementById('dash-pending-wd').innerText = s.size;
+                renderPayouts(s.docs);
+            });
+
+            onSnapshot(collection(db, "users"), s => {
+                document.getElementById('dash-users-count').innerText = s.size;
+                renderUsers(s.docs);
+            });
+
+            onSnapshot(doc(db, "admin_config", "seized_wallet"), s => {
+                const funds = s.exists() ? s.data().total_seized_funds : 0;
+                document.getElementById('dash-seized-funds').innerText = `₹${funds.toFixed(2)}`;
+            });
+
+            // Core Settings Listener
+            onSnapshot(doc(db, "admin_config", "settings"), s => {
+                if(s.exists()) {
+                    const d = s.data();
+                    document.getElementById('core-min-withdrawal').value = d.min_withdrawal_limit || 100;
+                    document.getElementById('core-ad-limit').value = d.daily_ad_limit || 10;
+                    document.getElementById('core-maint').value = (d.is_maintenance || false).toString();
+                    document.getElementById('core-video-rate').value = d.rewarded_video_rate || 0.05;
+                    document.getElementById('core-commission').value = d.processing_commission_fee || 5.0;
+                }
+            });
+
+            // Ad Switchboard Listener
+            onSnapshot(doc(db, "admin_config", "universal_ads"), s => {
+                if(s.exists()) {
+                    const d = s.data();
+                    document.getElementById('ads-active-net').value = d.active_network || "UNITY";
+                    document.getElementById('ads-app-id').value = d.primary_game_or_app_id || "";
+                    document.getElementById('ads-rewarded-id').value = d.rewarded_placement_id || "";
+                    document.getElementById('ads-interstitial-id').value = d.interstitial_placement_id || "";
+                    document.getElementById('ads-banner-id').value = d.banner_placement_id || "";
+                    document.getElementById('ads-enabled').value = (d.is_ads_enabled !== false).toString();
+                }
+            });
+
+            // Offerwall Settings Listener
+            onSnapshot(doc(db, "admin_config", "offerwall_settings"), s => {
+                if(s.exists()) {
+                    const d = s.data();
+                    renderOfferwallSetup(d);
+                }
+            });
+        }
+
+        // --- RENDERERS ---
+        function renderPayouts(docs) {
+            const list = document.getElementById('payout-list');
+            if(docs.length === 0) {
+                list.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold italic">Clear for takeoff. No pending requests.</td></tr>';
+                return;
+            }
+            list.innerHTML = docs.map(d => {
+                const p = d.data();
+                return `
+                    <tr class="text-sm hover:bg-slate-50 border-b">
+                        <td class="px-8 py-5">
+                            <p class="font-black text-slate-900">UID: ${p.userId?.substring(0, 8) || 'Unknown'}...</p>
+                            <p class="text-[10px] text-slate-400 font-bold">${d.id}</p>
+                        </td>
+                        <td class="px-8 py-5 text-center font-black text-emerald-600 text-lg">₹${p.amount}</td>
+                        <td class="px-8 py-5 font-bold text-slate-600">${p.upiId}</td>
+                        <td class="px-8 py-5 text-center flex justify-center space-x-2">
+                            <button onclick="manageWithdrawal('${d.id}', '${p.userId}', 'APPROVED', ${p.amount})" class="action-btn bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-emerald-600">Approve</button>
+                            <button onclick="manageWithdrawal('${d.id}', '${p.userId}', 'REJECTED', ${p.amount})" class="action-btn bg-white border border-red-200 text-red-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-red-50">Reject</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderUsers(docs) {
+            document.getElementById('user-list').innerHTML = docs.map(d => {
+                const u = d.data();
+                const isBanned = u.is_banned === true;
+                const isTempBanned = u.temp_ban_until && (u.temp_ban_until > Date.now());
+                return `
+                    <tr class="text-sm hover:bg-slate-50 border-b">
+                        <td class="px-8 py-5"><p class="font-bold">${u.name}</p><p class="text-[10px] text-slate-400">${u.uid || d.id}</p></td>
+                        <td class="px-8 py-5 text-center font-black">₹${(u.wallet_balance || 0).toFixed(2)}</td>
+                        <td class="px-8 py-5 text-center">
+                            <span class="${isBanned ? 'bg-red-100 text-red-600' : isTempBanned ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'} px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                ${isBanned ? 'Perm Banned' : isTempBanned ? 'Temp Lock' : 'Active'}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-center space-x-2">
+                            <button onclick="suspendUser('${d.id}')" class="text-slate-400 hover:text-orange-500 action-btn p-2" title="24H Temporary Ban">
+                                <i class="fas fa-hourglass-half"></i>
+                            </button>
+                            <button onclick="banAndSeize('${d.id}')" class="text-slate-400 hover:text-red-500 action-btn p-2" title="Perm Ban & Seize Funds">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderOfferwallSetup(d) {
+            const nets = [
+                { id: 'cpagrip', name: 'CPAGrip', icon: 'money-bill-trend-up', fields: ['user_id', 'pubkey'] },
+                { id: 'cpalead', name: 'CPAlead', icon: 'bullseye', fields: ['source_id', 'api_key'] },
+                { id: 'adsterra', name: 'Adsterra', icon: 'star', fields: ['publisher_id', 'cpa_token'] },
+                { id: 'pubscale', name: 'PubScale', icon: 'rocket', fields: ['app_id', 'secret_key'] },
+                { id: 'monlix', name: 'Monlix', icon: 'bolt', fields: ['api_key'] }
+            ];
+
+            document.getElementById('offerwall-grid').innerHTML = nets.map(n => `
+                <div class="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-${n.icon}"></i></div>
+                            <h4 class="font-black text-slate-800 uppercase tracking-tighter text-sm">${n.name}</h4>
+                        </div>
+                        <input type="checkbox" id="toggle-${n.id}" ${d[`is_${n.id}_enabled`] || d[`enable_${n.id}`] ? 'checked' : ''} class="w-5 h-5 accent-blue-600">
+                    </div>
+                    <div class="space-y-2">
+                        ${n.fields.map(f => `
+                            <input type="text" id="cfg-${n.id}-${f}" placeholder="${f.replace('_', ' ').toUpperCase()}" value="${d[`${n.id}_${f}`] || ''}" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border outline-none text-xs font-bold">
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- ACTIONS ---
+        window.manageWithdrawal = async (reqId, uId, status, amt) => {
+            if(!confirm(`Confirm ${status} for ₹${amt}?`)) return;
+            const requestRef = doc(db, "withdrawals", reqId);
+            const userRef = doc(db, "users", uId);
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    if (status === "APPROVED") {
+                        transaction.update(requestRef, { status: "SUCCESS" });
+                    } else {
+                        transaction.update(requestRef, { status: "REJECTED" });
+                        transaction.update(userRef, { wallet_balance: increment(amt) });
+                    }
+                });
+                alert(`${status} successful.`);
+            } catch(e) { alert("Transaction failed: " + e.message); }
+        };
+
+        window.suspendUser = async (uid) => {
+            if(!confirm("Suspend this user for 24 hours?")) return;
+            const userRef = doc(db, "users", uid);
+            const expiry = Date.now() + (24 * 60 * 60 * 1000);
+            try {
+                await updateDoc(userRef, { temp_ban_until: expiry });
+                alert("User suspended for 24 hours.");
+            } catch(e) { alert("Action Failed: " + e.message); }
+        };
+
+        window.banAndSeize = async (targetUid) => {
+            if(!confirm("DANGER: This will PERMANENTLY BAN the user and SEIZE their entire wallet balance. Proceed?")) return;
+            const userRef = doc(db, "users", targetUid);
+            const seizedRef = doc(db, "admin_config", "seized_wallet");
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userSnap = await transaction.get(userRef);
+                    if(!userSnap.exists()) throw "User not found";
+                    const bal = userSnap.data().wallet_balance || 0;
+
+                    transaction.update(userRef, { is_banned: true, wallet_balance: 0 });
+                    if(bal > 0) {
+                        transaction.set(seizedRef, { total_seized_funds: increment(bal) }, { merge: true });
+                    }
+                });
+                alert("User Perm Banned & Funds Seized.");
+            } catch(e) { alert("Enforcement Failed: " + e); }
+        };
+
+        window.saveCoreSettings = async () => {
+            const data = {
+                min_withdrawal_limit: parseFloat(document.getElementById('core-min-withdrawal').value),
+                daily_ad_limit: parseInt(document.getElementById('core-ad-limit').value),
+                rewarded_video_rate: parseFloat(document.getElementById('core-video-rate').value),
+                processing_commission_fee: parseFloat(document.getElementById('core-commission').value),
+                is_maintenance: document.getElementById('core-maint').value === 'true'
+            };
+            try {
+                await updateDoc(doc(db, "admin_config", "settings"), data);
+                alert("Core Parameters Updated.");
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        window.saveAdSettings = async () => {
+            const data = {
+                active_network: document.getElementById('ads-active-net').value,
+                primary_game_or_app_id: document.getElementById('ads-app-id').value,
+                rewarded_placement_id: document.getElementById('ads-rewarded-id').value,
+                interstitial_placement_id: document.getElementById('ads-interstitial-id').value,
+                banner_placement_id: document.getElementById('ads-banner-id').value,
+                is_ads_enabled: document.getElementById('ads-enabled').value === 'true'
+            };
+            try {
+                await setDoc(doc(db, "admin_config", "universal_ads"), data, { merge: true });
+                alert("Master Ad Switchboard Updated Globally.");
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        window.saveOfferwallSettings = async () => {
+            const data = {
+                is_cpagrip_enabled: document.getElementById('toggle-cpagrip').checked,
+                cpagrip_user_id: document.getElementById('cfg-cpagrip-user_id').value,
+                cpagrip_pubkey: document.getElementById('cfg-cpagrip-pubkey').value,
+                is_cpalead_enabled: document.getElementById('toggle-cpalead').checked,
+                cpalead_source_id: document.getElementById('cfg-cpalead-source_id').value,
+                cpalead_api_key: document.getElementById('cfg-cpalead-api_key').value,
+                is_adsterra_enabled: document.getElementById('toggle-adsterra').checked,
+                adsterra_publisher_id: document.getElementById('cfg-adsterra-publisher_id').value,
+                adsterra_cpa_token: document.getElementById('cfg-adsterra-cpa_token').value,
+                is_pubscale_enabled: document.getElementById('toggle-pubscale').checked,
+                pubscale_app_id: document.getElementById('cfg-pubscale-app_id').value,
+                pubscale_secret_key: document.getElementById('cfg-pubscale-secret_key').value,
+                is_monlix_enabled: document.getElementById('toggle-monlix').checked,
+                monlix_api_key: document.getElementById('cfg-monlix-api_key').value
+            };
+            await setDoc(doc(db, "admin_config", "offerwall_settings"), data, { merge: true });
+            alert("Offerwall Network Handlers Updated.");
+        };
+
+        window.switchTab = id => {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById(`tab-${id}`).classList.remove('hidden');
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(`nav-${id}`).classList.add('active');
+        };
+    </script>
+</body>
+</html>
