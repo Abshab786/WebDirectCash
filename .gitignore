@@ -1,0 +1,30 @@
+# Build and IDE
+.idea/
+.gradle/
+build/
+bin/
+obj/
+*.iml
+
+# Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Android Specific (Moved or Legacy)
+DirectCash/
+local.properties
+google-services.json
+
+# Web / OS
+node_modules/
+.DS_Store
+Thumbs.db
+.env
+.env.local
+
+# Security (Masked configs)
+/docs/api-plan.md
+/docs/database-structure.md
