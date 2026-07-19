@@ -179,13 +179,12 @@
                             <div class="space-y-6">
                                 <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border">
                                     <div>
-                                        <p class="font-bold text-slate-800">Maintenance Mode</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Locks User Application</p>
+                                        <p class="font-bold text-slate-800">System Maintenance</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase">Emergency Lock Switch</p>
                                     </div>
-                                    <select id="core-maint" class="bg-white border rounded-xl px-4 py-2 font-black text-sm outline-none">
-                                        <option value="false">OFF</option>
-                                        <option value="true">ON</option>
-                                    </select>
+                                    <button id="maintenance-toggle-btn" onclick="toggleMaintenance()" class="bg-slate-200 text-slate-600 px-6 py-2 rounded-xl font-black text-sm outline-none transition-all">
+                                        INITIALIZING...
+                                    </button>
                                 </div>
                                 <button onclick="saveCoreSettings()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black hover:bg-blue-600 transition-all shadow-xl shadow-blue-500/10 active:scale-95">
                                     COMMIT CORE UPDATES
@@ -347,15 +346,30 @@
                 document.getElementById('dash-seized-funds').innerText = `₹${funds.toFixed(2)}`;
             });
 
-            // Core Settings Listener
+            // Core Settings Listener - Refactored to system/settings
             onSnapshot(doc(db, "admin_config", "settings"), s => {
                 if(s.exists()) {
                     const d = s.data();
                     document.getElementById('core-min-withdrawal').value = d.min_withdrawal_limit || 100;
                     document.getElementById('core-ad-limit').value = d.daily_ad_limit || 10;
-                    document.getElementById('core-maint').value = (d.is_maintenance || false).toString();
                     document.getElementById('core-video-rate').value = d.rewarded_video_rate || 0.05;
                     document.getElementById('core-commission').value = d.processing_commission_fee || 5.0;
+                }
+            });
+
+            // Maintenance State Sync
+            onSnapshot(doc(db, "system", "settings"), s => {
+                const btn = document.getElementById('maintenance-toggle-btn');
+                if(s.exists()) {
+                    const isMaint = s.data().isMaintenanceMode || false;
+                    window.currentMaintenanceState = isMaint;
+                    if (isMaint) {
+                        btn.innerText = "MAINTENANCE: ON";
+                        btn.className = "bg-red-500 text-white px-6 py-2 rounded-xl font-black text-sm outline-none transition-all active:scale-95";
+                    } else {
+                        btn.innerText = "MAINTENANCE: OFF";
+                        btn.className = "bg-emerald-500 text-white px-6 py-2 rounded-xl font-black text-sm outline-none transition-all active:scale-95";
+                    }
                 }
             });
 
@@ -462,6 +476,23 @@
         }
 
         // --- ACTIONS ---
+        window.toggleMaintenance = async () => {
+            const btn = document.getElementById('maintenance-toggle-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            try {
+                const newState = !window.currentMaintenanceState;
+                await setDoc(doc(db, "system", "settings"), { isMaintenanceMode: newState }, { merge: true });
+            } catch(e) {
+                alert("Action Failed: " + e.message);
+                btn.innerText = originalText;
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
         window.manageWithdrawal = async (reqId, uId, status, amt) => {
             if(!confirm(`Confirm ${status} for ₹${amt}?`)) return;
             const requestRef = doc(db, "withdrawals", reqId);
@@ -511,17 +542,27 @@
         };
 
         window.saveCoreSettings = async () => {
-            const data = {
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            const configData = {
                 min_withdrawal_limit: parseFloat(document.getElementById('core-min-withdrawal').value),
                 daily_ad_limit: parseInt(document.getElementById('core-ad-limit').value),
                 rewarded_video_rate: parseFloat(document.getElementById('core-video-rate').value),
-                processing_commission_fee: parseFloat(document.getElementById('core-commission').value),
-                is_maintenance: document.getElementById('core-maint').value === 'true'
+                processing_commission_fee: parseFloat(document.getElementById('core-commission').value)
             };
+
             try {
-                await updateDoc(doc(db, "admin_config", "settings"), data);
-                alert("Core Parameters Updated.");
-            } catch(e) { alert("Error: " + e.message); }
+                await updateDoc(doc(db, "admin_config", "settings"), configData);
+                alert("Core Economics Parameters Updated.");
+            } catch(e) {
+                alert("Error: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         };
 
         window.saveAdSettings = async () => {

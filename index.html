@@ -158,8 +158,8 @@
         </div>
     </section>
 
-    <!-- 3. MAIN DASHBOARD -->
-    <section id="view-dashboard" class="view hidden-view pb-24 overflow-y-auto">
+    <!-- 3. MAIN DASHBOARD / HOME -->
+    <section id="view-home" class="view hidden-view pb-24 overflow-y-auto">
         <!-- Dashboard Header -->
         <header class="premium-gradient px-6 pt-12 pb-32">
             <div class="flex justify-between items-center mb-6">
@@ -200,7 +200,7 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="switchTab('wallet')" class="w-full mt-6 bg-white py-3.5 rounded-xl font-bold text-[#0A4D2E] flex items-center justify-center transition-all active:scale-95">
+                <button onclick="handleNavClick(event, 'wallet')" class="w-full mt-6 bg-white py-3.5 rounded-xl font-bold text-[#0A4D2E] flex items-center justify-center transition-all active:scale-95">
                     <i class="fas fa-wallet mr-2"></i>
                     Withdraw to UPI
                     <i class="fas fa-chevron-right text-xs ml-2"></i>
@@ -712,6 +712,20 @@
         </div>
     </div>
 
+    <!-- Maintenance Overlay -->
+    <div id="maintenance-overlay" class="fixed inset-0 z-[300] bg-[#0A4D2E] flex flex-col items-center justify-center hidden">
+        <div class="bg-white/10 p-12 rounded-[3rem] backdrop-blur-md border border-white/10 flex flex-col items-center text-center max-w-sm mx-6">
+            <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-8">
+                <i class="fas fa-tools text-white text-4xl animate-bounce"></i>
+            </div>
+            <h2 class="text-white text-3xl font-black mb-4">Under Maintenance</h2>
+            <p class="text-emerald-100 font-medium leading-relaxed">We're currently performing a scheduled system upgrade to improve your earning experience. We'll be back shortly!</p>
+            <div class="mt-10 pt-8 border-t border-white/5 w-full">
+                <p class="text-[10px] text-emerald-200 uppercase font-black tracking-[0.2em]">Server Status: Updating</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK & Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -730,6 +744,31 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // --- MAINTENANCE MODE INTERCEPTOR ---
+        onSnapshot(doc(db, "system", "settings"), (snap) => {
+            const maintenanceOverlay = document.getElementById('maintenance-overlay');
+            if (snap.exists() && snap.data().isMaintenanceMode) {
+                console.log("System: Maintenance Mode Activated.");
+                maintenanceOverlay.classList.remove('hidden');
+
+                // Clear any active game timers/modals
+                if (window.videoInterval) {
+                    clearInterval(window.videoInterval);
+                    window.videoInterval = null;
+                }
+                const adModal = document.getElementById('video-ad-modal');
+                if (adModal) adModal.classList.add('hidden');
+
+                // Reset router state to home to prevent landing on a task after maintenance
+                if (history.state && history.state.view !== 'home') {
+                    history.replaceState({ view: 'home' }, "Home", "");
+                }
+            } else {
+                console.log("System: Operational.");
+                if (maintenanceOverlay) maintenanceOverlay.classList.add('hidden');
+            }
+        });
 
         // --- GLOBAL POPUNDER INTERCEPTION (Monetag) ---
         // Triggers once per session on the very first user interaction
@@ -920,12 +959,13 @@
             if (user) {
                 currentUser = user;
                 // Transition seamlessly into the main layout dashboard
-                internalSwitchView('dashboard', false);
+                internalSwitchView('home', false);
                 document.getElementById('bottom-nav').classList.remove('hidden');
                 initSync();
                 initWebAds(); // Initialize Ads for Authenticated Session
             } else {
                 currentUser = null;
+                // Force reset to splash then auth
                 internalSwitchView('splash', false);
                 document.getElementById('bottom-nav').classList.add('hidden');
                 setTimeout(() => {
@@ -936,7 +976,13 @@
 
         // --- DATA SYNC & UI ---
         function initSync() {
-            onSnapshot(doc(db, "admin_config", "settings"), snap => {
+            // Clean up previous listeners if any (simple approach for SPA)
+            if (window.activeListeners) {
+                window.activeListeners.forEach(unsubscribe => unsubscribe());
+            }
+            window.activeListeners = [];
+
+            const unsubscribeSettings = onSnapshot(doc(db, "admin_config", "settings"), snap => {
                 if (snap.exists()) {
                     adminSettings = { ...adminSettings, ...snap.data() };
                     document.getElementById('label-min-wd').innerText = `Amount (Min ₹500)`;
@@ -945,17 +991,19 @@
                     document.getElementById('scratch-max-label').innerText = `Win up to ₹${adminSettings.scratch_max_reward}`;
                 }
             });
+            window.activeListeners.push(unsubscribeSettings);
 
-            onSnapshot(doc(db, "users", currentUser.uid), snap => {
+            const unsubscribeUser = onSnapshot(doc(db, "users", currentUser.uid), snap => {
                 if (!snap.exists()) return;
                 userData = snap.data();
                 if (userData.is_banned) { alert("ACCOUNT BANNED"); logOut(); return; }
                 updateGlobalUI();
             });
+            window.activeListeners.push(unsubscribeUser);
 
-            // Withdrawal History Ledger (Sub-collection)
+            // Transactions
             const qTx = query(collection(doc(db, "users", currentUser.uid), "withdrawals"), orderBy("timestamp", "desc"), limit(15));
-            onSnapshot(qTx, snap => {
+            const unsubscribeTx = onSnapshot(qTx, snap => {
                 const container = document.getElementById('withdrawals-ledger-container');
                 if (snap.empty) {
                     container.innerHTML = '<div class="bg-white p-6 rounded-2xl border border-dashed border-gray-100 text-center"><p class="text-gray-300 text-xs italic">No past withdrawal records found.</p></div>';
@@ -988,6 +1036,7 @@
                     `;
                 }).join('');
             });
+            window.activeListeners.push(unsubscribeTx);
 
             // AUTOMATED MEGA TASK HUB: Fetching Live CPAGrip RSS Offers
             loadAutomatedLiveOffers();
@@ -995,6 +1044,15 @@
 
         async function loadAutomatedLiveOffers() {
             const container = document.getElementById('tasks-container');
+            if (!container) return;
+
+            // FLUSH state to prevent stacking/residual widgets
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 opacity-20">
+                    <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i>
+                    <p class="text-[8px] font-bold uppercase tracking-widest">Refreshing Global Streams</p>
+                </div>
+            `;
 
             // 1. CPAGRIP CONFIG (RSS Feed)
             const gripFeedUrl = `https://www.cpagrip.com/common/offer_feed_rss.php?user_id=2543099&key=f86d76c5e9d8e0a1174f8a79f5f78cba&ip=&tracking_id=`;
